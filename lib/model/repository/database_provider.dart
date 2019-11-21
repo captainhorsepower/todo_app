@@ -1,6 +1,5 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:todo_chunks/model/repository/dao/task_dao.dart';
 
 class DatabaseProvider {
   static final databaseFileName = 'todo_chunks.db';
@@ -9,18 +8,46 @@ class DatabaseProvider {
     print('onCofigure for database ${db.path}');
 
     // enable foreign keys (disabled by default)
-    await db.execute('PRAGMA foreign_keys = ON;');
+    print('enable foreign keys');
+    // await db.execute('PRAGMA foreign_keys = OFF');
+
+    print('create closure table');
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS task_tree_closure (
+  id INTEGER NOT NULL REFERENCES tasks (id),
+  parent_id INTEGER NOT NULL REFERENCES tasks (id),
+  direct_parent_id INTEGER REFERENCES tasks (id),
+  relative_depth INTEGER NOT NULL,
+  PRIMARY KEY (id, parent_id),
+  CHECK(
+    (
+      id == parent_id
+      AND relative_depth == 0
+    )
+    OR (
+      id != parent_id
+      AND direct_parent_id != id
+      AND relative_depth > 0
+    )
+  )
+)
+''');
+
+    print('create tasks table');
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS tasks (
+  id INTEGER,
+  title TEXT NOT NULL,
+  duration_mins INT NOT NULL DEFAULT 30,
+  created_at TEXT NOT NULL,
+  due_to TEXT,
+  is_done BOOLEAN NOT NULL DEFAULT FALSE,
+  PRIMARY KEY (id),
+  CHECK(duration_mins > 0)
+)
+''');
 
     print('onConfigure finished');
-  };
-
-  static final OnDatabaseCreateFn onCreateFn = (db, _) async {
-    print('onCreate for database with path ${db.path}');
-
-    // create table for tasks
-    await db.execute(TaskDao.createTableQuery);
-
-    print('onCreate finished');
   };
 
   static DatabaseProvider _instance = DatabaseProvider._internal();
@@ -34,28 +61,32 @@ class DatabaseProvider {
   static DatabaseProvider get instance => _instance;
 
   Future<Database> get database async {
-
     print('get database called');
-    
-    _path ??= await getDatabasesPath();
 
-    _path = join(_path, databaseFileName);
+    if (_database == null) {
+      await _init();
+    }
 
-    print('attemtinp to open database');
-    try {
-    _database ??= await openDatabase(
+    print('database.isOpen=${_database?.isOpen}');
+
+    return _database;
+  }
+
+  _init() async {
+    if (_path == null) {
+      print('get database path');
+      _path = await getDatabasesPath();
+      _path = join(_path, databaseFileName);
+    }
+    print('path=$_path');
+
+    print('open database');
+
+    _database = await openDatabase(
       _path,
-      version: 1,
       onConfigure: onConfigureFn,
-      onCreate: onCreateFn,
     );
-    } catch (e, st) {
-      _database = null;
-      print(st);
-    } 
 
     print('success');
-    
-    return _database;
   }
 }

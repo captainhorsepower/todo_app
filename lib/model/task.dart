@@ -1,7 +1,8 @@
-/// self-contained task, knows about 
+import 'package:flutter/material.dart';
+
+/// self-contained task, knows about
 /// itself, other connected tasks and nothing esle.
 class Task {
-
   int id;
 
   /// direct parent, userful for updates
@@ -26,4 +27,19 @@ class Task {
 
   bool isDone;
 
+  Task({
+    this.id,
+    this.parent,
+    this.subtasks,
+    @required this.title,
+    this.expectedDuration,
+    this.totalExpectedDuration,
+    this.createdAt,
+    this.dueTo,
+    this.isDone = false,
+  }) {
+    createdAt ??= DateTime.now();
+    subtasks ??= [];
+    expectedDuration ??= Duration(minutes: 30);
+  }
 }
