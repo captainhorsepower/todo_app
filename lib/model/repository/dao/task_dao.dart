@@ -83,6 +83,26 @@ WHERE
   AND c.relative_depth < ?2;
   """;
 
+  static const findRootsAndKidsAtDepth = """
+SELECT
+  c.direct_parent_id,
+  task.*,
+  (
+    SELECT
+      COALESCE(sum(kid.duration_mins), 0)
+    FROM
+      tasks kid
+      LEFT JOIN task_tree_closure c ON kid.id = c.id
+    WHERE
+      c.parent_id = task.id
+  ) AS total_duration_mins
+FROM
+  tasks task
+  LEFT JOIN task_tree_closure c ON task.id = c.id
+WHERE
+  c.parent_id IN (SELECT id FROM task_tree_closure WHERE direct_parent_id IS NULL)
+  AND c.relative_depth < ?1
+  """;
   /// create task from database map. Parent and subtasks are null.
   @override
   Task fromJson(Map<String, dynamic> data) {

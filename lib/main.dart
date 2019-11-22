@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:todo_chunks/model/repository/database_provider.dart';
-import 'package:todo_chunks/model/repository/task_repository.dart';
 import 'package:todo_chunks/view/unlisted_tasks_screen.dart';
 
-import 'model/task.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,10 +9,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(title: 'Unlisted Tasks: demo page'),
+      theme: ThemeData(brightness: Brightness.dark),
+      home: MyHomePage(title: 'Unlisted Tasks'),
     );
   }
 }
@@ -30,44 +25,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  TasksRepository repo = TasksRepository();
-
-  @override
-  void initState() {
-    print('initialized state');
-
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
-    var list = <String>[];
-
-    list.add('str1');
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Container(
-          child: UnlistedTaskScreen(),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          print('pressed button');
-
-          final db = await DatabaseProvider.instance.database;
-
-          var result = await db.rawQuery('select * from task_tree_closure');
-          result.forEach(print);
-
-          print('button released UI lock');
-        },
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+    return UnlistedTaskScreen();
   }
 }

@@ -37,22 +37,28 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
       ),
       body: Column(
         children: <Widget>[
-          Hero(
-            tag: widget.task.title,
-            transitionOnUserGestures: true,
-            child: Container(
-              color: Colors.blue,
-              child: TaskView(widget.task),
-            ),
+          Container(
+            child: TaskView(widget.task),
           ),
           Container(
-            height: 600,
+            height: 400,
             child: task == null
                 ? Center(
                     child: CircularProgressIndicator(),
                   )
                 : ListView(
-                    children: task.subtasks.map((task) => TaskView(task)).toList(),
+                    children: task.subtasks
+                        .map((task) => GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => ExpandedTaskScreen(task: task)),
+                                );
+                              },
+                              child: TaskView(task),
+                            ))
+                        .toList(),
                   ),
           ),
         ],

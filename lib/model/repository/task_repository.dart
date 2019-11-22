@@ -35,7 +35,6 @@ class TasksRepository implements Repository<Task, int> {
     return task;
   }
 
-  @override
   Future<void> insertInTree(List<Map<String, dynamic>> pathToRoot) async {
     print('insert task in the tree');
 
@@ -45,16 +44,13 @@ class TasksRepository implements Repository<Task, int> {
         .join(", ");
 
     final db = await provider.database;
-    await db.rawInsert(
-      'INSERT INTO task_tree_closure '
-      '(id, parent_id, direct_parent_id, relative_depth) '
-      'values $insertValues'
-      );
+    await db.rawInsert('INSERT INTO task_tree_closure '
+        '(id, parent_id, direct_parent_id, relative_depth) '
+        'values $insertValues');
 
     print('task inserted.');
   }
 
-  @override
   Future<void> insertAsNewRoot(Task task) async {
     assert(task.parent == null);
     print('insert task as root');
@@ -95,6 +91,29 @@ class TasksRepository implements Repository<Task, int> {
     print('got results: $result');
 
     return taskDao.fromJson(result.first);
+  }
+
+  Future<List<Task>> findAllRoots() async {
+    print('find all roots');
+
+    final db = await provider.database;
+    final result = await db.rawQuery(TaskDao.findRootsAndKidsAtDepth, [2]);
+
+    final idTaskMap = <int, Task>{};
+    result.forEach((taskMap) {
+      idTaskMap.putIfAbsent(taskMap['id'], () => taskDao.fromJson(taskMap));
+    });
+
+    result.forEach((taskMap) {
+      if (taskMap['direct_parent_id'] == null) return;
+      final task = idTaskMap[taskMap['id']];
+      final parent = idTaskMap[taskMap['direct_parent_id']];
+
+      task.parent = parent;
+      parent.subtasks.add(task);
+    });
+
+    return idTaskMap.values.where((task) => task.parent == null).toList();
   }
 
   Future<Task> findWithChildrenById(int id, int depth) async {
