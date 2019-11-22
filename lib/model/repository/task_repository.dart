@@ -25,43 +25,63 @@ class TasksRepository implements Repository<Task, int> {
 
   @override
   Future<Task> save(Task task) async {
+    print('save task');
+
     final db = await provider.database;
-
-    print('create task');
-
     task.id = await db.insert(TaskDao.tableName, taskDao.toJson(task));
 
-    print('task created, id = ${task.id}');
-
-    // task is root
-    if (task.parent == null) {
-      db.insert('task_tree_closure', <String, dynamic>{
-        'id': task.id,
-        'parent_id': task.id,
-        'relative_depth': 0,
-      });
-    }
-    // task is not root
-    else {
-      // FIXME: insert all by one query
-      var parent = task;
-      var depth = 0;
-      while (parent != null) {
-        print('task.id=${task.id}, parent.id=${parent.id}, depth=$depth');
-        db.insert('task_tree_closure', <String, dynamic>{
-          'id': task.id,
-          'direct_parent_id': task.parent.id,
-          'parent_id': parent.id,
-          'relative_depth': depth,
-        });
-        depth++;
-        parent = parent.parent;
-      }
-    }
-
-    print('inserted task in the tree');
+    print('saved. task.id = ${task.id}');
 
     return task;
+  }
+
+  @override
+  Future<void> insertInTree(List<Map<String, dynamic>> pathToRoot) async {
+    print('insert task in the tree');
+
+    final String insertValues = pathToRoot
+        .map((map) =>
+            "(${map['id']}, ${map['parent_id']}, ${map['direct_parent_id']}, ${map['relative_depth']})")
+        .join(", ");
+
+    final db = await provider.database;
+    await db.rawInsert(
+      'INSERT INTO task_tree_closure '
+      '(id, parent_id, direct_parent_id, relative_depth) '
+      'values $insertValues'
+      );
+
+    print('task inserted.');
+  }
+
+  @override
+  Future<void> insertAsNewRoot(Task task) async {
+    assert(task.parent == null);
+    print('insert task as root');
+
+    final db = await provider.database;
+    await db.insert('task_tree_closure', <String, dynamic>{
+      'id': task.id,
+      'parent_id': task.id,
+      'relative_depth': 0,
+    });
+
+    print('created new root, id=${task.id}');
+  }
+
+  Future<List<Map<String, dynamic>>> getPathToRoot(int id) async {
+    print('get path to the root, id=$id');
+
+    final db = await provider.database;
+    final path = await db.query(
+      'task_tree_closure',
+      columns: ['parent_id', 'relative_depth'],
+      where: 'id = ?1',
+      whereArgs: [id],
+    );
+
+    print('got path.');
+    return path;
   }
 
   @override
@@ -99,7 +119,6 @@ class TasksRepository implements Repository<Task, int> {
 
       task.parent = parent;
       parent.subtasks.add(task);
-
     });
 
     return idTaskMap[id];
