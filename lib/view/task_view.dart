@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../model/task.dart';
 
@@ -59,9 +60,7 @@ class TaskView extends StatelessWidget {
   }
 
   String formatDate(DateTime dateTime) {
-    // yy/mm/dd at hh:mm
-    return '${dateTime.year}/${dateTime.month}/${dateTime.day}'
-        ' at '
-        '${dateTime.hour}:${dateTime.minute}';
+    final format = DateFormat('dd MMMM hh:mm a');
+    return format.format(dateTime);
   }
 }

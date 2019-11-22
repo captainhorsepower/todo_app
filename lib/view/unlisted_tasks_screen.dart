@@ -30,8 +30,18 @@ class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
       child: tasks == null
           ? CircularProgressIndicator()
           : ListView(
-              children: tasks.map((task) => TaskView(task)).toList(),
+              children: tasks.map(_buildListTile).toList(),
             ),
+    );
+  }
+
+  Widget _buildListTile(Task task) {
+    return ExpansionTile(
+      leading: Text('leading'),
+      title: TaskView(task),
+      trailing: Text('trailing'),
+      // children: task.subtasks.map((task) => TaskView(task)).toList(),
+      children: task.subtasks.map((task) => TaskView(task)).toList(),
     );
   }
 }
