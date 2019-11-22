@@ -93,6 +93,7 @@ class TasksRepository implements Repository<Task, int> {
 
     result.forEach((taskMap) {
       if (taskMap['direct_parent_id'] == null) return;
+      if (taskMap['id'] == id) return;
       final task = idTaskMap[taskMap['id']];
       final parent = idTaskMap[taskMap['direct_parent_id']];
 

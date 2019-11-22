@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Unilsted tasks demo page'),
     );
   }
 }
@@ -57,6 +57,11 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           print('pressed button');
+
+          final db = await DatabaseProvider.instance.database;
+
+          var result = await db.rawQuery('select * from task_tree_closure');
+          result.forEach(print);
 
           print('button released UI lock');
         },

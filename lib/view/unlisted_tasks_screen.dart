@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:todo_chunks/model/repository/task_repository.dart';
 import 'package:todo_chunks/model/task.dart';
+import 'package:todo_chunks/view/expanded_task_screen.dart';
 import 'package:todo_chunks/view/task_view.dart';
 
 class UnlistedTaskScreen extends StatefulWidget {
@@ -30,18 +31,33 @@ class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
       child: tasks == null
           ? CircularProgressIndicator()
           : ListView(
-              children: tasks.map(_buildListTile).toList(),
+              children: tasks.map((task) => _buildListTile(task, context)).toList(),
             ),
     );
   }
 
-  Widget _buildListTile(Task task) {
+  Widget _buildListTile(Task task, BuildContext context) {
     return ExpansionTile(
       leading: Text('leading'),
       title: TaskView(task),
       trailing: Text('trailing'),
       // children: task.subtasks.map((task) => TaskView(task)).toList(),
-      children: task.subtasks.map((task) => TaskView(task)).toList(),
+      children: task.subtasks
+          .map(
+            (task) => GestureDetector(
+              child: TaskView(task),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ExpandedTaskScreen(
+                            task: task,
+                          )),
+                );
+              },
+            ),
+          )
+          .toList(),
     );
   }
 }

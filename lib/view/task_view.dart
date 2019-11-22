@@ -60,7 +60,7 @@ class TaskView extends StatelessWidget {
   }
 
   String formatDate(DateTime dateTime) {
-    final format = DateFormat('dd MMMM hh:mm a');
+    final format = DateFormat('dd MMM hh:mm a');
     return format.format(dateTime);
   }
 }
