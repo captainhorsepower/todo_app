@@ -32,24 +32,31 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(150),
-        child: AppBar(
-          flexibleSpace: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.only(top: 37),
+      appBar: AppBar(
+        title: Text('Expanded task screen'),
+      ),
+      body: Column(
+        children: <Widget>[
+          Hero(
+            tag: widget.task.title,
+            transitionOnUserGestures: true,
+            child: Container(
+              color: Colors.blue,
               child: TaskView(widget.task),
             ),
           ),
-        ),
+          Container(
+            height: 600,
+            child: task == null
+                ? Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : ListView(
+                    children: task.subtasks.map((task) => TaskView(task)).toList(),
+                  ),
+          ),
+        ],
       ),
-      body: task == null
-          ? Center(
-              child: CircularProgressIndicator(),
-            )
-          : ListView(
-              children: task.subtasks.map((task) => TaskView(task)).toList(),
-            ),
     );
   }
 }

@@ -45,7 +45,10 @@ class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
       children: task.subtasks
           .map(
             (task) => GestureDetector(
-              child: TaskView(task),
+              child: Hero(
+                tag: task.title,
+                child: TaskView(task),
+              ),
               onTap: () {
                 Navigator.push(
                   context,
