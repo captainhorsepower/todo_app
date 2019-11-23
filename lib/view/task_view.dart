@@ -47,6 +47,14 @@ class TaskView extends StatelessWidget {
 
     final trigger = Provider.of<RebuildTrigger>(context);
 
+    final func = () async {
+      if (canComplete) {
+        TapticFeedback.fromCode(1394);
+        await taskController.setDone(task, true);
+        trigger.trigger();
+      }
+    };
+
     return GestureDetector(
       child: Center(
         child: Icon(
@@ -55,13 +63,8 @@ class TaskView extends StatelessWidget {
           color: canComplete ? clr : clr.withOpacity(0.5),
         ),
       ),
-      onTap: () async {
-        if (canComplete) {
-          TapticFeedback.fromCode(1394);
-          await taskController.setDone(task, true);
-          trigger.trigger();
-        }
-      },
+      onTap: func,
+      onLongPress: func,
     );
   }
 
@@ -150,6 +153,16 @@ class TaskViewExpanded extends StatelessWidget {
 
     final canComplete = this.task.subtasks.isEmpty;
 
+    final func = () async {
+      if (canComplete) {
+        TapticFeedback.fromCode(1394);
+        await taskController.setDone(task, true);
+        Navigator.pop(context);
+      }
+
+      TapticFeedback.fromCode(1519);
+    };
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: clr),
@@ -163,16 +176,8 @@ class TaskViewExpanded extends StatelessWidget {
             color: canComplete ? clr : clr.withOpacity(0.5),
           ),
         ),
-        onTap: () async {
-          if (canComplete) {
-            TapticFeedback.fromCode(1394);
-            await taskController.setDone(task, true);
-            Navigator.pop(context);
-          }
-
-          TapticFeedback.fromCode(1519);
-        },
-        onForcePressPeak: (_) => TapticFeedback.fromCode(1102),
+        onTap: func,
+        onLongPress: func,
       ),
     );
   }
@@ -228,7 +233,7 @@ class TaskViewExpanded extends StatelessWidget {
         Expanded(
             flex: 2,
             child: Text(
-              '${task.duration.inMinutes} in total',
+              '${task.totalDuration.inMinutes} in total',
               textAlign: TextAlign.center,
               style: TextStyle(color: clr),
             )),

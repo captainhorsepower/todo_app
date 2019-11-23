@@ -73,6 +73,7 @@ SELECT
       LEFT JOIN task_tree_closure c ON kid.id = c.id
     WHERE
       c.parent_id = task.id
+      AND kid.is_done = false
   ) AS total_duration_mins
 FROM
   tasks task
@@ -95,6 +96,7 @@ SELECT
       LEFT JOIN task_tree_closure c ON kid.id = c.id
     WHERE
       c.parent_id = task.id
+      AND kid.is_done = false
   ) AS total_duration_mins
 FROM
   tasks task

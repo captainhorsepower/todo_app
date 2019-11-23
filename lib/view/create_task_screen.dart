@@ -116,7 +116,6 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 ));
             return;
           }
-          Navigator.pop(context);
         },
       ),
     );
