@@ -35,6 +35,66 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: <Widget>[
+          // FIXME: UI is not updated properly.
+          IconButton(
+            icon: Icon(Icons.create),
+            onPressed: () async {
+              final task = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  fullscreenDialog: true,
+                  builder: (context) => CreateTaskScreen(
+                    task: this.task,
+                  ),
+                ),
+              );
+
+              if (task != null) {
+                final repo = TasksRepository();
+                await repo.update(task);
+                final updated = await repo.findWithChildrenById(task.id, 2);
+                setState(() {
+                  this.task = updated;
+                });
+              }
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () async {
+              final repo = TasksRepository();
+              bool res = await showDialog(
+                context: context,
+                builder: (context) => Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    FlatButton(
+                      child: Text(
+                        'Confirm',
+                        textScaleFactor: 3,
+                      ),
+                      onPressed: () => Navigator.pop(context, true),
+                    ),
+                    FlatButton(
+                      child: Text(
+                        'Cancel',
+                        textScaleFactor: 3,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              );
+
+              res ??= false;
+
+              if (res) {
+                await repo.delete(task);
+              }
+            },
+          ),
+        ],
         title: Text('Expanded task screen'),
       ),
       body: Column(

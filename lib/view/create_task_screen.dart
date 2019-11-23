@@ -3,6 +3,10 @@ import 'package:intl/intl.dart';
 import '../model/task.dart';
 
 class CreateTaskScreen extends StatefulWidget {
+  final Task task;
+
+  const CreateTaskScreen({Key key, this.task}) : super(key: key);
+
   @override
   _CreateTaskScreenState createState() => _CreateTaskScreenState();
 }
@@ -15,10 +19,20 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   DateTime dueTo;
 
   @override
+  void initState() {
+    if (widget.task != null) {
+      titleController.text = widget.task.title;
+      durationController.text = widget.task.expectedDuration.inMinutes.toString();
+    }
+    dueTo = widget.task?.dueTo;
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('New Task'),
+        title: Text('Create / Update Task'),
       ),
       body: Column(
         children: <Widget>[
@@ -85,33 +99,30 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               ],
             ),
           ),
-          Expanded(
-            flex: 1,
-            child: Container(
-              child: IconButton(
-                iconSize: 100,
-                icon: Icon(Icons.save),
-                onPressed: () {
-                  final title = titleController.text;
-                  final durationText = durationController.text;
-
-                  if (title.isNotEmpty && durationText.isNotEmpty) {
-                    final duration = Duration(minutes: int.parse(durationText));
-                    Navigator.pop(
-                        context,
-                        Task(
-                          title: title,
-                          expectedDuration: duration,
-                          dueTo: dueTo,
-                        ));
-                        return;
-                  }
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-          )
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.save),
+        onPressed: () {
+          final title = titleController.text;
+          final durationText = durationController.text;
+
+          if (title.isNotEmpty && durationText.isNotEmpty) {
+            final duration = Duration(minutes: int.parse(durationText));
+            Navigator.pop(
+                context,
+                Task(
+                  id: widget.task?.id,
+                  parent: widget.task?.parent,
+                  title: title,
+                  expectedDuration: duration,
+                  createdAt: widget.task?.createdAt ?? DateTime.now(),
+                  dueTo: dueTo,
+                ));
+            return;
+          }
+          Navigator.pop(context);
+        },
       ),
     );
   }

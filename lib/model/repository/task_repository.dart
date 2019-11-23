@@ -163,7 +163,7 @@ class TasksRepository implements Repository<Task, int> {
 
   // FIXME: delete rows from closure table, or use cascade
   Future<void> delete(Task task) async {
-    print('delete task $task');
+    print('delete task ${task.id}');
 
     final db = await provider.database;
 
@@ -172,6 +172,8 @@ class TasksRepository implements Repository<Task, int> {
       where: '${TaskDao.id} = ?',
       whereArgs: [task.id],
     );
+    //FIXME: this has issues
+    await db.rawDelete('delete from task_tree_closure where id = ${task.id} or parent_id = ${task.id}');
 
     print('result = $result');
   }
