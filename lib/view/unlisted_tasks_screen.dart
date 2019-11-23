@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:todo_chunks/model/controller/controller_provider.dart';
 
 import '../model/controller/task_controller.dart';
 import '../model/repository/task_repository.dart';
@@ -17,13 +18,16 @@ class UnlistedTaskScreen extends StatefulWidget {
 class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
   List<Task> tasks;
 
+  final taskController = ControllerProvider.instance.taskController;
+
   @override
   void initState() {
-    TaskRepository repo = TaskRepository();
-    repo.findAllRoots().then((tasks) {
-      this.setState(() => this.tasks = tasks);
-    });
+    _updateTasks();
     super.initState();
+  }
+
+  _updateTasks() {
+    taskController.loadAllRoots().then((tasks) => setState(() => this.tasks = tasks));
   }
 
   @override
@@ -57,29 +61,24 @@ class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
     );
 
     if (task != null) {
-      final controller = TaskController();
-      controller.create(task: task).then((saved) {
-        TaskRepository repo = TaskRepository();
-        repo.findAllRoots().then((tasks) {
-          this.setState(() => this.tasks = tasks);
-        });
-      });
+      await taskController.create(task: task);
+      _updateTasks();
     }
   }
+}
 
-  Widget _buildListTile(Task task, BuildContext context) {
-    return ExpansionTile(
-      title: TaskView(task),
-      children: task.subtasks
-          .map((task) => GestureDetector(
-              child: TaskView(task),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ExpandedTaskScreen(task: task)),
-                );
-              }))
-          .toList(),
-    );
-  }
+Widget _buildListTile(Task task, BuildContext context) {
+  return ExpansionTile(
+    title: TaskView(task),
+    children: task.subtasks
+        .map((task) => GestureDetector(
+            child: TaskView(task),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ExpandedTaskScreen(task: task)),
+              );
+            }))
+        .toList(),
+  );
 }

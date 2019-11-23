@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_chunks/model/controller/task_controller.dart';
-import 'package:todo_chunks/model/repository/task_repository.dart';
+import 'package:todo_chunks/model/controller/controller_provider.dart';
 import 'package:todo_chunks/view/task_view.dart';
 
 import '../model/task.dart';
@@ -16,19 +15,18 @@ class ExpandedTaskScreen extends StatefulWidget {
 }
 
 class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
-  TaskRepository taskRepo = TaskRepository();
   Task task;
+  final taskController = ControllerProvider.instance.taskController;
 
   @override
   void initState() {
-    () async {
-      task = await taskRepo.findWithChildrenById(widget.task.id, 2);
-      setState(() {});
-    }();
-
-    print('expanded screen init state');
-
+    _updateTask();
     super.initState();
+  }
+
+  _updateTask() async {
+    final loaded = await taskController.loadById(widget.task.id);
+    setState(() => this.task = loaded);
   }
 
   @override
@@ -40,7 +38,7 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
           IconButton(
             icon: Icon(Icons.create),
             onPressed: () async {
-              final task = await Navigator.push(
+              final updatedTask = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   fullscreenDialog: true,
@@ -50,13 +48,9 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
                 ),
               );
 
-              if (task != null) {
-                final repo = TaskRepository();
-                await repo.update(task);
-                final updated = await repo.findWithChildrenById(task.id, 2);
-                setState(() {
-                  this.task = updated;
-                });
+              if (updatedTask != null) {
+                taskController.update(updatedTask);
+                _updateTask();
               }
             },
           ),
@@ -89,9 +83,8 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
               res ??= false;
 
               if (res) {
-                final controller = TaskController();
-                await controller.deleteWithKids(task);
-                setState(() {});
+                await taskController.deleteWithKids(task);
+                Navigator.pop(context);
               }
             },
           ),
@@ -101,7 +94,7 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
       body: Column(
         children: <Widget>[
           Container(
-            child: TaskView(widget.task),
+            child: task == null ? CircularProgressIndicator() : TaskView(task),
           ),
           Expanded(
             flex: 1,
@@ -116,9 +109,13 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => ExpandedTaskScreen(task: task)));
+                                    builder: (context) => ExpandedTaskScreen(task: task),
+                                  ));
                             },
-                            child: TaskView(task)))
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                              child: TaskView(task),
+                            )))
                         .toList()),
           ),
         ],
@@ -143,8 +140,8 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
     );
 
     if (newTask != null) {
-      final controller = TaskController();
-      await controller.create(task: newTask, parent: this.task);
+      await taskController.create(task: newTask, parent: this.task);
+      _updateTask();
     }
   }
 }

@@ -46,4 +46,13 @@ class TaskController {
     
     await taskService.deleteWithKids(task);
   }
+
+  Future<List<Task>> loadAllRoots() {
+    return taskService.loadAllRoots();
+  }
+
+  Future<Task> loadById(int id, {int depth = 1}) {
+    return taskService.loadById(id, depth);
+  }
+
 }

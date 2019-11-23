@@ -1,5 +1,4 @@
 import '../../task.dart';
-import 'dao.dart';
 
 /// v 0.0.1
 /// Таски строят из себя лес деревьев.
@@ -18,7 +17,7 @@ import 'dao.dart';
 ///
 /// -- таска подгружает с собой своих детей, сколько уровней? -- пока не решено
 // FIXME: hardcoded values
-class TaskDao implements Dao<Task> {
+class TaskDao {
   // all this fields must be static, to be accessed in initalizers.
   static const tableName = 'tasks';
   static const id = 'id';
@@ -80,7 +79,7 @@ FROM
   LEFT JOIN task_tree_closure c ON task.id = c.id
 WHERE
   c.parent_id = ?1
-  AND c.relative_depth < ?2;
+  AND c.relative_depth <= ?2;
   """;
 
   static const findRootsAndKidsAtDepth = """
@@ -101,7 +100,7 @@ FROM
   LEFT JOIN task_tree_closure c ON task.id = c.id
 WHERE
   c.parent_id IN (SELECT id FROM task_tree_closure WHERE direct_parent_id IS NULL)
-  AND c.relative_depth < ?1
+  AND c.relative_depth <= ?1
   """;
   /// create task from database map. Parent and subtasks are null.
   @override

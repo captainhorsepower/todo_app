@@ -45,4 +45,12 @@ class TaskService {
   Future<void> deleteWithKids(Task task) async {
     await taskRepo.delete(task);
   }
+
+  Future<List<Task>> loadAllRoots() {
+    return taskRepo.findAllRoots();
+  }
+
+  Future<Task> loadById(int id, int depth) {
+    return taskRepo.findById(id, depth);
+  }
 }
