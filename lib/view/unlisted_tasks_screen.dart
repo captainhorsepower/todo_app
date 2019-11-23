@@ -5,7 +5,6 @@ import 'package:todo_chunks/view/rebuild_trigger.dart';
 
 import '../model/task.dart';
 import '../model/controller/controller_provider.dart';
-import 'expanded_task_screen.dart';
 import 'task_view.dart';
 import 'create_task_screen.dart';
 
@@ -15,7 +14,7 @@ class UnlistedTaskScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tasksFuture = taskController.loadAllRoots();
-
+    final trigger = Provider.of<RebuildTrigger>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('All Tasks'),
@@ -40,6 +39,7 @@ class UnlistedTaskScreen extends StatelessWidget {
           final newTask = await _showCreateTask(context);
           if (newTask != null) {
             await taskController.create(task: newTask);
+            trigger.trigger();
           }
         },
       ),
@@ -62,16 +62,5 @@ class UnlistedTaskScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskView(Task task, BuildContext context) => GestureDetector(
-      child: TaskView(task),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => ChangeNotifierProvider(
-                    builder: (_) => RebuildTrigger(),
-                    child: ExpandedTaskScreen(task),
-                  )),
-        );
-      });
+  Widget _buildTaskView(Task task, BuildContext context) => TaskView(task);
 }

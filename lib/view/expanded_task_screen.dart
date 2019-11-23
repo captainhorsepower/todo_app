@@ -96,8 +96,7 @@ class ExpandedTaskScreen extends StatelessWidget {
         onPressed: () async {
           Task newTask = await _showCreateTaskScreen(context);
           if (newTask != null) {
-            final parent = await taskController.loadById(task.id, depth: 0);
-            await taskController.create(task: newTask, parent: parent);
+            await taskController.create(task: newTask, parent: task);
             trigger.trigger();
           }
         },
@@ -138,16 +137,5 @@ class ExpandedTaskScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskView(Task task, BuildContext context) => GestureDetector(
-      child: TaskView(task),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => ChangeNotifierProvider(
-                    builder: (_) => RebuildTrigger(),
-                    child: ExpandedTaskScreen(task),
-                  )),
-        );
-      });
+  Widget _buildTaskView(Task task, BuildContext context) => TaskView(task);
 }
