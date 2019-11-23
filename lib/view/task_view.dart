@@ -117,7 +117,7 @@ class TaskViewExpanded extends StatelessWidget {
           child: Row(
             children: <Widget>[
               Expanded(flex: 1, child: _buildDoneButton(context)),
-              Expanded(flex: 5, child: _buildTaskLayout(context)),
+              Expanded(flex: 4, child: _buildTaskLayout(context)),
             ],
           ),
         ),

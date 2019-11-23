@@ -9,6 +9,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // TODO: remove it
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(brightness: Brightness.dark),
       home: ChangeNotifierProvider(
