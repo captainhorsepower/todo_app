@@ -142,6 +142,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.0+1"
+  taptic_feedback:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "2bc30bf00fa1bd3dba160f2ff1045a6c5fc61e73"
+      url: "https://github.com/captainhorsepower/ios_system_sounds_for_flutter.git"
+    source: git
+    version: "0.0.1"
   term_glyph:
     dependency: transitive
     description:

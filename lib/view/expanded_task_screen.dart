@@ -11,7 +11,7 @@ class ExpandedTaskScreen extends StatelessWidget {
   final Task task;
   final taskController = ControllerProvider.instance.taskController;
 
-  ExpandedTaskScreen({Key key, this.task}) : super(key: key);
+  ExpandedTaskScreen(this.task);
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +143,11 @@ class ExpandedTaskScreen extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ExpandedTaskScreen(task: task)),
+          MaterialPageRoute(
+              builder: (context) => ChangeNotifierProvider(
+                    builder: (_) => RebuildTrigger(),
+                    child: ExpandedTaskScreen(task),
+                  )),
         );
       });
 }

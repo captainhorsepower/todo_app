@@ -25,6 +25,10 @@ dependencies:
 
   sqflite: ^1.1.7+2
 
+  taptic_feedback:
+    git:
+      url: https://github.com/captainhorsepower/ios_system_sounds_for_flutter.git
+
   cupertino_icons: ^0.1.2
 
 dev_dependencies:

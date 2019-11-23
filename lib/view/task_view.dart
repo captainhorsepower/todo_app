@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:taptic_feedback/taptic_feedback.dart';
 
 import '../model/controller/controller_provider.dart';
 import '../model/task.dart';
@@ -55,9 +56,9 @@ class TaskView extends StatelessWidget {
       ),
       onTap: () async {
         if (canComplete) {
+          TapticFeedback.fromCode(1394);
           await taskController.setDone(task, true);
           trigger.trigger();
-          // TODO: add satisfying vibration.
         }
       },
     );
@@ -151,11 +152,14 @@ class TaskViewExpanded extends StatelessWidget {
         ),
         onTap: () async {
           if (canComplete) {
+            TapticFeedback.fromCode(1394);
             await taskController.setDone(task, true);
             Navigator.pop(context);
-            // TODO: add satisfying vibration.
           }
+
+          TapticFeedback.fromCode(1519);
         },
+        onForcePressPeak: (_) => TapticFeedback.fromCode(1102),
       ),
     );
   }

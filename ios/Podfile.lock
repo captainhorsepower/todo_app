@@ -6,10 +6,13 @@ PODS:
   - sqflite (0.0.1):
     - Flutter
     - FMDB (~> 2.7.2)
+  - taptic_feedback (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `.symlinks/flutter/ios`)
   - sqflite (from `.symlinks/plugins/sqflite/ios`)
+  - taptic_feedback (from `.symlinks/plugins/taptic_feedback/ios`)
 
 SPEC REPOS:
   trunk:
@@ -20,11 +23,14 @@ EXTERNAL SOURCES:
     :path: ".symlinks/flutter/ios"
   sqflite:
     :path: ".symlinks/plugins/sqflite/ios"
+  taptic_feedback:
+    :path: ".symlinks/plugins/taptic_feedback/ios"
 
 SPEC CHECKSUMS:
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   sqflite: ff1d9da63c06588cc8d1faf7256d741f16989d5a
+  taptic_feedback: f168de5bd33923ae524baafa27e4f4fa2c428f40
 
 PODFILE CHECKSUM: b6a0a141693093b304368d08511b46cf3d1d0ac5
 

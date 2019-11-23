@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
+import 'package:todo_chunks/view/rebuild_trigger.dart';
 
 import '../model/task.dart';
 import '../model/controller/controller_provider.dart';
@@ -65,7 +67,11 @@ class UnlistedTaskScreen extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ExpandedTaskScreen(task: task)),
+          MaterialPageRoute(
+              builder: (context) => ChangeNotifierProvider(
+                    builder: (_) => RebuildTrigger(),
+                    child: ExpandedTaskScreen(task),
+                  )),
         );
       });
 }
