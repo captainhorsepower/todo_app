@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:todo_chunks/model/controller/task_controller.dart';
 import 'package:todo_chunks/model/repository/task_repository.dart';
 import 'package:todo_chunks/view/task_view.dart';
 
 import '../model/task.dart';
+import 'create_task_screen.dart';
 
 class ExpandedTaskScreen extends StatefulWidget {
   final Task task;
@@ -49,20 +51,46 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
                 : ListView(
                     children: task.subtasks
                         .map((task) => GestureDetector(
-                              onTap: () {
-                                Navigator.push(
+                            onTap: () {
+                              Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => ExpandedTaskScreen(task: task)),
-                                );
-                              },
-                              child: TaskView(task),
-                            ))
-                        .toList(),
-                  ),
+                                      builder: (context) => ExpandedTaskScreen(task: task)));
+                            },
+                            child: TaskView(task)))
+                        .toList()),
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await _showCreateTask(context);
+        },
+        tooltip: 'Add new task',
+        child: Icon(Icons.add),
+      ),
     );
+  }
+
+  Future<void> _showCreateTask(BuildContext context) async {
+    final task = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => CreateTaskScreen(),
+      ),
+    );
+
+    if (task != null) {
+      task.parent = this.task;
+
+      final controller = TaskController();
+      controller.createNewTask(task).then((saved) {
+        TasksRepository repo = TasksRepository();
+        repo.findWithChildrenById(task.id, 2).then((task) {
+          this.setState(() => this.task = task);
+        });
+      });
+    }
   }
 }

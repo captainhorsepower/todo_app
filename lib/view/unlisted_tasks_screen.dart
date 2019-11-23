@@ -39,11 +39,7 @@ class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          print('pressed button');
-
           await _showCreateTask(context);
-
-          print('button released UI lock');
         },
         tooltip: 'Add new task',
         child: Icon(Icons.add),
@@ -51,7 +47,7 @@ class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
     );
   }
 
-  Future _showCreateTask(BuildContext context) async {
+  Future<void> _showCreateTask(BuildContext context) async {
     final task = await Navigator.push(
       context,
       MaterialPageRoute(
