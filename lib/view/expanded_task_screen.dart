@@ -1,28 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:todo_chunks/view/rebuild_trigger.dart';
 
 import '../model/controller/controller_provider.dart';
 import '../model/task.dart';
 import 'create_task_screen.dart';
 import 'task_view.dart';
 
-class ExpandedTaskScreen extends StatefulWidget {
+class ExpandedTaskScreen extends StatelessWidget {
   final Task task;
-
-  const ExpandedTaskScreen({Key key, this.task}) : super(key: key);
-
-  @override
-  _ExpandedTaskScreenState createState() => _ExpandedTaskScreenState();
-}
-
-class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
   final taskController = ControllerProvider.instance.taskController;
+
+  ExpandedTaskScreen({Key key, this.task}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final taskFuture = taskController.loadById(widget.task.id, depth: 2);
+    final taskFuture = taskController.loadById(task.id, depth: 2);
 
-    var taskHolder = widget.task;
+    var taskHolder = task;
     taskFuture.then((task) => taskHolder = task);
+
+    final trigger = Provider.of<RebuildTrigger>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -40,7 +38,7 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
 
               if (updatedTask != null) {
                 await taskController.update(updatedTask);
-                setState(() {});
+                trigger.trigger();
               }
             },
           ),
@@ -98,9 +96,9 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
         onPressed: () async {
           Task newTask = await _showCreateTaskScreen(context);
           if (newTask != null) {
-            final parent = await taskController.loadById(widget.task.id, depth: 0);
+            final parent = await taskController.loadById(task.id, depth: 0);
             await taskController.create(task: newTask, parent: parent);
-            setState(() {});
+            trigger.trigger();
           }
         },
         tooltip: 'Add new task',
