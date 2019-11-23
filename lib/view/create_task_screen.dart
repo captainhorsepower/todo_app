@@ -22,7 +22,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   void initState() {
     if (widget.task != null) {
       titleController.text = widget.task.title;
-      durationController.text = widget.task.expectedDuration.inMinutes.toString();
+      durationController.text = widget.task.duration.inMinutes.toString();
     }
     dueTo = widget.task?.dueTo;
     super.initState();
@@ -115,7 +115,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                   id: widget.task?.id,
                   parent: widget.task?.parent,
                   title: title,
-                  expectedDuration: duration,
+                  duration: duration,
                   createdAt: widget.task?.createdAt ?? DateTime.now(),
                   dueTo: dueTo,
                 ));

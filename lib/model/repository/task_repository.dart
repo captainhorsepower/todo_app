@@ -9,33 +9,34 @@ class TasksRepository implements Repository<Task, int> {
   final DatabaseProvider provider = DatabaseProvider.instance;
   final TaskDao taskDao = TaskDao();
 
-  doQuery(String query) async {
-    print('hello from repo');
-    final Database db = await provider.database;
+  // doQuery(String query) async {
+  //   print('hello from repo');
+  //   final Database db = await provider.database;
 
-    print('recieved database');
+  //   print('recieved database');
 
-    print('executing query: \n$query');
-    final result = await db.rawQuery(query);
-    // db.ins
+  //   print('executing query: \n$query');
+  //   final result = await db.rawQuery(query);
+  //   // db.ins
 
-    print('got results!');
-    result.forEach(print);
-  }
+  //   print('got results!');
+  //   result.forEach(print);
+  // }
 
   @override
   Future<Task> save(Task task) async {
-    print('save task');
+    print('repository: save task');
 
     final db = await provider.database;
-    task.id = await db.insert(TaskDao.tableName, taskDao.toJson(task));
+    final generatedId = await db.insert(TaskDao.tableName, taskDao.toJson(task));
+    task = task.copyWith(id: generatedId);
 
-    print('saved. task.id = ${task.id}');
+    print('repository: saved, task.id = $generatedId');
 
     return task;
   }
 
-  Future<void> insertInTree(List<Map<String, dynamic>> pathToRoot) async {
+  Future<void> insertAsChild(List<Map<String, dynamic>> pathToRoot) async {
     print('insert task in the tree');
 
     final String insertValues = pathToRoot
@@ -51,8 +52,7 @@ class TasksRepository implements Repository<Task, int> {
     print('task inserted.');
   }
 
-  Future<void> insertAsNewRoot(Task task) async {
-    assert(task.parent == null);
+  Future<void> insertAsRoot(Task task) async {
     print('insert task as root');
 
     final db = await provider.database;
@@ -161,20 +161,23 @@ class TasksRepository implements Repository<Task, int> {
     return task;
   }
 
-  // FIXME: delete rows from closure table, or use cascade
   Future<void> delete(Task task) async {
-    print('delete task ${task.id}');
+    print('repository: delete task with all kids');
 
     final db = await provider.database;
 
-    int result = await db.delete(
-      TaskDao.tableName,
-      where: '${TaskDao.id} = ?',
-      whereArgs: [task.id],
-    );
-    //FIXME: this has issues
-    await db.rawDelete('delete from task_tree_closure where id = ${task.id} or parent_id = ${task.id}');
+    final result = await db.rawQuery('select id from task_tree_closure where parent_id = ?1', [task.id]);
+    final ids = result.map((map)=>map['id']).toList();
+    final inRangeStr = '(${ids.join(', ')})';
 
-    print('result = $result');
+    print('tasks in range $inRangeStr will be deleted.');
+
+    // delete all from task_tree_closure
+    await db.rawDelete('delete from task_tree_closure where parent_id IN $inRangeStr');
+    
+    // delete tasks
+    final deletedCount = await db.rawDelete('delete from tasks where id IN $inRangeStr');
+
+    print('repository: deleted $deletedCount tasks.');
   }
 }

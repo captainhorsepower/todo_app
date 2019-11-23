@@ -109,8 +109,8 @@ WHERE
     return Task(
       id: data['id'],
       title: data['title'],
-      expectedDuration: Duration(minutes: data['duration_mins']),
-      totalExpectedDuration: Duration(minutes: data['total_duration_mins']),
+      duration: Duration(minutes: data['duration_mins']),
+      totalDuration: Duration(minutes: data['total_duration_mins']),
       createdAt: DateTime.parse(data['created_at']).toLocal(),
       dueTo: data['due_to'] != null ? DateTime.parse(data['due_to']).toLocal() : null,
       isDone: data['is_done'] != 0,
@@ -122,7 +122,7 @@ WHERE
     return <String, dynamic>{
       'id': task.id,
       'title': task.title,
-      'duration_mins': task.expectedDuration.inMinutes,
+      'duration_mins': task.duration.inMinutes,
       'created_at': task.createdAt.toUtc().toIso8601String(),
       'due_to': task.dueTo?.toUtc()?.toIso8601String(),
       'is_done': task.isDone,

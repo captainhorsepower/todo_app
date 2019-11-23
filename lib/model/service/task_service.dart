@@ -5,39 +5,42 @@ import '../task.dart';
 class TaskService {
   TasksRepository taskRepo = TasksRepository();
 
-  Future<Task> save(Task task) async {
-    print('save new task');
+  Future<Task> saveRoot(Task task) async {
+    task = await taskRepo.save(task);
+    await taskRepo.insertAsRoot(task);
+    return task;
+  }
 
-    final parent = task.parent;
+  Future<Task> saveChild(Task task, Task parent) async {
+    task = await taskRepo.save(task);
 
-    task = (await taskRepo.save(task))..parent = parent;
+    final parentToRootMap = await taskRepo.getPathToRoot(parent.id);
+    final taskToRootMap = parentToRootMap
+        .map((map) => <String, dynamic>{
+              'id': task.id,
+              'parent_id': map['parent_id'],
+              'direct_parent_id': parent.id,
+              'relative_depth': map['relative_depth'] + 1,
+            })
+        .toList()
+          ..add(<String, dynamic>{
+            'id': task.id,
+            'parent_id': task.id,
+            'direct_parent_id': parent.id,
+            'relative_depth': 0
+          });
 
-    print('put task in existion tree');
-    if (parent == null) {
-      await taskRepo.insertAsNewRoot(task);
-    } else {
-      // just in case some parents got offloaded from memory
-      // I load the whole path. This might cause performance
-      // issues in case user creates tree with height=O(n)
-      // where n is about 10^8
-      // LOL
-      final pathToRoot = (await taskRepo.getPathToRoot(parent.id))
-          .map((map) => <String, dynamic>{
-                'id': task.id,
-                'parent_id': map['parent_id'],
-                'direct_parent_id': parent.id,
-                'relative_depth': map['relative_depth'] + 1,
-              })
-          .toList();
-      pathToRoot.add(<String, dynamic>{
-        'id': task.id,
-        'parent_id': task.id,
-        'direct_parent_id': parent.id,
-        'relative_depth': 0,
-      });
-      await taskRepo.insertInTree(pathToRoot);
-    }
+    await taskRepo.insertAsChild(taskToRootMap);
 
     return task;
+  }
+
+  Future<Task> update(Task task) async {
+    task = await taskRepo.update(task);
+    return task;
+  }
+
+  Future<void> deleteWithKids(Task task) async {
+    await taskRepo.delete(task);
   }
 }

@@ -63,7 +63,6 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
           IconButton(
             icon: Icon(Icons.delete),
             onPressed: () async {
-              final repo = TasksRepository();
               bool res = await showDialog(
                 context: context,
                 builder: (context) => Row(
@@ -90,7 +89,9 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
               res ??= false;
 
               if (res) {
-                await repo.delete(task);
+                final controller = TaskController();
+                await controller.deleteWithKids(task);
+                setState(() {});
               }
             },
           ),
@@ -133,7 +134,7 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
   }
 
   Future<void> _showCreateTask(BuildContext context) async {
-    final task = await Navigator.push(
+    final newTask = await Navigator.push(
       context,
       MaterialPageRoute(
         fullscreenDialog: true,
@@ -141,16 +142,9 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
       ),
     );
 
-    if (task != null) {
-      task.parent = this.task;
-
+    if (newTask != null) {
       final controller = TaskController();
-      controller.createNewTask(task).then((saved) {
-        TasksRepository repo = TasksRepository();
-        repo.findWithChildrenById(task.id, 2).then((task) {
-          this.setState(() => this.task = task);
-        });
-      });
+      await controller.create(task: newTask, parent: this.task);
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// self-contained task, knows about
@@ -14,10 +15,10 @@ class Task {
   String title;
 
   /// time, that this task is supposed to take
-  Duration expectedDuration;
+  Duration duration;
 
   /// this.expectedDuration + (all subtasks (recursive)).expectedDuration
-  Duration totalExpectedDuration;
+  Duration totalDuration;
 
   /// creation time, uts
   DateTime createdAt;
@@ -32,14 +33,36 @@ class Task {
     this.parent,
     this.subtasks,
     @required this.title,
-    this.expectedDuration,
-    this.totalExpectedDuration,
+    this.duration,
+    this.totalDuration,
     this.createdAt,
     this.dueTo,
     this.isDone = false,
   }) {
     createdAt ??= DateTime.now();
     subtasks ??= [];
-    expectedDuration ??= Duration(minutes: 30);
+    duration ??= Duration(minutes: 30);
+  }
+
+  Task copyWith({
+    int id,
+    Task parent,
+    String title,
+    List<Task> subtasks,
+    Duration duration,
+    DateTime createdAt,
+    DateTime dueTo,
+    bool isDone,
+  }) {
+    return Task(
+      id: id ?? this.id,
+      parent: parent ?? this.parent,
+      title: title ?? this.title,
+      subtasks: subtasks ?? this.subtasks,
+      duration: duration ?? this.duration,
+      createdAt: createdAt ?? this.createdAt,
+      dueTo: dueTo ?? this.dueTo,
+      isDone: isDone ?? this.isDone,
+    );
   }
 }

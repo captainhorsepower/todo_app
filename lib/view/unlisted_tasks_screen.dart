@@ -58,7 +58,7 @@ class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
 
     if (task != null) {
       final controller = TaskController();
-      controller.createNewTask(task).then((saved) {
+      controller.create(task: task).then((saved) {
         TasksRepository repo = TasksRepository();
         repo.findAllRoots().then((tasks) {
           this.setState(() => this.tasks = tasks);

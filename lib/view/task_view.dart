@@ -44,10 +44,10 @@ class TaskView extends StatelessWidget {
                 child: Column(
                   children: <Widget>[
                     Expanded(
-                      child: Text('${task.expectedDuration.inMinutes}'),
+                      child: Text('${task.duration.inMinutes}'),
                     ),
                     Expanded(
-                      child: Text('${task.totalExpectedDuration.inMinutes}'),
+                      child: Text('${task.totalDuration.inMinutes}'),
                     )
                   ],
                 ),
