@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:todo_chunks/view/rebuild_trigger.dart';
 import 'package:todo_chunks/view/unlisted_tasks_screen.dart';
-
 
 void main() => runApp(MyApp());
 
@@ -10,7 +11,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(brightness: Brightness.dark),
-      home: MyHomePage(title: 'Unlisted Tasks'),
+      home: ChangeNotifierProvider(
+        builder: (_) => RebuildTrigger(),
+        child: MyHomePage(title: 'Unlisted Tasks'),
+      ),
     );
   }
 }

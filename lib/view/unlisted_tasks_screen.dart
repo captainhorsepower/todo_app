@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 
 import '../model/task.dart';
 import '../model/controller/controller_provider.dart';
 import 'expanded_task_screen.dart';
+import 'rebuild_trigger.dart';
 import 'task_view.dart';
 import 'create_task_screen.dart';
 
@@ -13,6 +15,9 @@ class UnlistedTaskScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tasksFuture = taskController.loadAllRoots();
+
+    final trigger = Provider.of<RebuildTrigger>(context);
+    print('list: tringger = $trigger');
 
     return Scaffold(
       appBar: AppBar(

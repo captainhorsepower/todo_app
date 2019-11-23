@@ -120,7 +120,7 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
 
   Widget _mainTaskView(BuildContext context, Task task) {
     return Container(
-      child: TaskView(task),
+      child: TaskViewExpanded(task),
     );
   }
 

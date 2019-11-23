@@ -2,16 +2,16 @@ import '../../task.dart';
 
 /// v 0.0.1
 /// Таски строят из себя лес деревьев.
-/// Таблице тасок пофиг на структуру. Дерево создаётся 
-/// с помощью task_closure_table, где 
+/// Таблице тасок пофиг на структуру. Дерево создаётся
+/// с помощью task_closure_table, где
 /// -- id - таска
 /// -- parent_id - таска на пути от id до корня (включая)
 /// -- direct_parent_id - непосредственный родитель (null для корня)
 /// -- relative_depth - расстояние между id и parent_id
-/// 
+///
 /// Соблюдаются следующие инварианты:
 ///
-/// -- для любая уже загруженной таски уже 
+/// -- для любая уже загруженной таски уже
 ///    либо загружен её родитель,
 ///    либо таска является корнем в лесу тасок.
 ///
@@ -79,7 +79,8 @@ FROM
   LEFT JOIN task_tree_closure c ON task.id = c.id
 WHERE
   c.parent_id = ?1
-  AND c.relative_depth <= ?2;
+  AND c.relative_depth <= ?2
+  AND task.is_done = 0
   """;
 
   static const findRootsAndKidsAtDepth = """
@@ -101,9 +102,9 @@ FROM
 WHERE
   c.parent_id IN (SELECT id FROM task_tree_closure WHERE direct_parent_id IS NULL)
   AND c.relative_depth <= ?1
+  AND task.is_done = false
   """;
-  /// create task from database map. Parent and subtasks are null.
-  @override
+
   Task fromJson(Map<String, dynamic> data) {
     return Task(
       id: data['id'],
@@ -116,7 +117,6 @@ WHERE
     );
   }
 
-  @override
   Map<String, dynamic> toJson(Task task) {
     return <String, dynamic>{
       'id': task.id,
