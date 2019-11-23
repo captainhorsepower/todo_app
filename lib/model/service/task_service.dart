@@ -1,9 +1,11 @@
+import 'package:todo_chunks/model/repository/repo_provider.dart';
+
 import '../repository/task_repository.dart';
 import '../task.dart';
 
 // TODO: make use of transactions for rollbacks
 class TaskService {
-  TasksRepository taskRepo = TasksRepository();
+  TaskRepository taskRepo = RepositoryProvider.instance.taskRepo;
 
   Future<Task> saveRoot(Task task) async {
     task = await taskRepo.save(task);

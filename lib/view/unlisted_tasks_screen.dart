@@ -19,7 +19,7 @@ class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
 
   @override
   void initState() {
-    TasksRepository repo = TasksRepository();
+    TaskRepository repo = TaskRepository();
     repo.findAllRoots().then((tasks) {
       this.setState(() => this.tasks = tasks);
     });
@@ -59,7 +59,7 @@ class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
     if (task != null) {
       final controller = TaskController();
       controller.create(task: task).then((saved) {
-        TasksRepository repo = TasksRepository();
+        TaskRepository repo = TaskRepository();
         repo.findAllRoots().then((tasks) {
           this.setState(() => this.tasks = tasks);
         });

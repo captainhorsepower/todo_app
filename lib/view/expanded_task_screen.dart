@@ -16,7 +16,7 @@ class ExpandedTaskScreen extends StatefulWidget {
 }
 
 class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
-  TasksRepository taskRepo = TasksRepository();
+  TaskRepository taskRepo = TaskRepository();
   Task task;
 
   @override
@@ -51,7 +51,7 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
               );
 
               if (task != null) {
-                final repo = TasksRepository();
+                final repo = TaskRepository();
                 await repo.update(task);
                 final updated = await repo.findWithChildrenById(task.id, 2);
                 setState(() {

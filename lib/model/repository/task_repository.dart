@@ -5,7 +5,7 @@ import 'package:todo_chunks/model/repository/repository.dart';
 
 import '../task.dart';
 
-class TasksRepository implements Repository<Task, int> {
+class TaskRepository implements Repository<Task, int> {
   final DatabaseProvider provider = DatabaseProvider.instance;
   final TaskDao taskDao = TaskDao();
 

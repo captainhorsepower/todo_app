@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:todo_chunks/model/service/service_provider.dart';
 
 import '../service/task_service.dart';
 import '../task.dart';
 
 class TaskController {
-  TaskService taskService = TaskService();
+  TaskService taskService = ServiceProvider.instance.taskService;
 
   Future<Task> create({@required Task task, Task parent}) async {
     assert(task != null);
