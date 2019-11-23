@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:todo_chunks/model/controller/controller_provider.dart';
-import 'package:todo_chunks/view/task_view.dart';
 
+import '../model/controller/controller_provider.dart';
 import '../model/task.dart';
 import 'create_task_screen.dart';
+import 'task_view.dart';
 
 class ExpandedTaskScreen extends StatefulWidget {
   final Task task;
@@ -15,26 +15,18 @@ class ExpandedTaskScreen extends StatefulWidget {
 }
 
 class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
-  Task task;
   final taskController = ControllerProvider.instance.taskController;
 
   @override
-  void initState() {
-    _updateTask();
-    super.initState();
-  }
-
-  _updateTask() async {
-    final loaded = await taskController.loadById(widget.task.id);
-    setState(() => this.task = loaded);
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final taskFuture = taskController.loadById(widget.task.id, depth: 2);
+
+    var taskHolder = widget.task;
+    taskFuture.then((task) => taskHolder = task);
+
     return Scaffold(
       appBar: AppBar(
         actions: <Widget>[
-          // FIXME: UI is not updated properly.
           IconButton(
             icon: Icon(Icons.create),
             onPressed: () async {
@@ -42,48 +34,40 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
                 context,
                 MaterialPageRoute(
                   fullscreenDialog: true,
-                  builder: (context) => CreateTaskScreen(
-                    task: this.task,
-                  ),
+                  builder: (context) => CreateTaskScreen(task: taskHolder),
                 ),
               );
 
               if (updatedTask != null) {
-                taskController.update(updatedTask);
-                _updateTask();
+                await taskController.update(updatedTask);
+                setState(() {});
               }
             },
           ),
           IconButton(
             icon: Icon(Icons.delete),
             onPressed: () async {
-              bool res = await showDialog(
+              bool deleteFlag = await showDialog(
                 context: context,
                 builder: (context) => Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: <Widget>[
                     FlatButton(
-                      child: Text(
-                        'Confirm',
-                        textScaleFactor: 3,
-                      ),
+                      child: Text('Delete', textScaleFactor: 3),
                       onPressed: () => Navigator.pop(context, true),
                     ),
                     FlatButton(
-                      child: Text(
-                        'Cancel',
-                        textScaleFactor: 3,
-                      ),
+                      child: Text('Mercy', textScaleFactor: 3),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
               );
 
-              res ??= false;
+              deleteFlag ??= false;
 
-              if (res) {
-                await taskController.deleteWithKids(task);
+              if (deleteFlag) {
+                await taskController.deleteWithKids(taskHolder);
                 Navigator.pop(context);
               }
             },
@@ -91,38 +75,33 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
         ],
         title: Text('Expanded task screen'),
       ),
-      body: Column(
-        children: <Widget>[
-          Container(
-            child: task == null ? CircularProgressIndicator() : TaskView(task),
-          ),
-          Expanded(
-            flex: 1,
-            child: task == null
-                ? Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : ListView(
-                    children: task.subtasks
-                        .map((task) => GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ExpandedTaskScreen(task: task),
-                                  ));
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                              child: TaskView(task),
-                            )))
-                        .toList()),
-          ),
-        ],
+      body: FutureBuilder<Task>(
+        future: taskFuture,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          final loadedTask = snapshot.data;
+          return Column(
+            children: <Widget>[
+              _mainTaskView(context, loadedTask),
+              Expanded(
+                flex: 1,
+                child: _buildSubtaskList(context, loadedTask),
+              ),
+            ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await _showCreateTask(context);
+          Task newTask = await _showCreateTaskScreen(context);
+          if (newTask != null) {
+            final parent = await taskController.loadById(widget.task.id, depth: 0);
+            await taskController.create(task: newTask, parent: parent);
+            setState(() {});
+          }
         },
         tooltip: 'Add new task',
         child: Icon(Icons.add),
@@ -130,18 +109,43 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
     );
   }
 
-  Future<void> _showCreateTask(BuildContext context) async {
-    final newTask = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (context) => CreateTaskScreen(),
-      ),
-    );
-
-    if (newTask != null) {
-      await taskController.create(task: newTask, parent: this.task);
-      _updateTask();
-    }
+  Future<Task> _showCreateTaskScreen(BuildContext context) async {
+    return Navigator.push<Task>(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => CreateTaskScreen(),
+        ));
   }
+
+  Widget _mainTaskView(BuildContext context, Task task) {
+    return Container(
+      child: TaskView(task),
+    );
+  }
+
+  Widget _buildSubtaskList(BuildContext context, Task task) {
+    return ListView(children: task.subtasks.map((task) => _buildListTile(task, context)).toList());
+  }
+
+  Widget _buildListTile(Task task, BuildContext context) {
+    return ExpansionTile(
+      title: _buildTaskView(task, context),
+      children: task.subtasks
+          .map((task) => Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 55),
+                child: _buildTaskView(task, context),
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _buildTaskView(Task task, BuildContext context) => GestureDetector(
+      child: TaskView(task),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ExpandedTaskScreen(task: task)),
+        );
+      });
 }

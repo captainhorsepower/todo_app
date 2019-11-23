@@ -1,84 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:todo_chunks/model/controller/controller_provider.dart';
 
-import '../model/controller/task_controller.dart';
-import '../model/repository/task_repository.dart';
 import '../model/task.dart';
-import '../view/expanded_task_screen.dart';
-import '../view/task_view.dart';
-
+import '../model/controller/controller_provider.dart';
+import 'expanded_task_screen.dart';
+import 'task_view.dart';
 import 'create_task_screen.dart';
 
-class UnlistedTaskScreen extends StatefulWidget {
-  @override
-  _UnlistedTaskScreenState createState() => _UnlistedTaskScreenState();
-}
-
-class _UnlistedTaskScreenState extends State<UnlistedTaskScreen> {
-  List<Task> tasks;
-
+class UnlistedTaskScreen extends StatelessWidget {
   final taskController = ControllerProvider.instance.taskController;
 
   @override
-  void initState() {
-    _updateTasks();
-    super.initState();
-  }
-
-  _updateTasks() {
-    taskController.loadAllRoots().then((tasks) => setState(() => this.tasks = tasks));
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final tasksFuture = taskController.loadAllRoots();
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Unlisted Tasks'),
+        title: Text('All Tasks'),
       ),
-      body: tasks == null
-          ? CircularProgressIndicator()
-          : ListView(
-              children: tasks.map((task) => _buildListTile(task, context)).toList(),
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await _showCreateTask(context);
+      body: FutureBuilder(
+        future: tasksFuture,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          List<Task> tasks = snapshot.data;
+          return ListView(
+            children: tasks.map((task) => _buildListTile(task, context)).toList(),
+          );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
         tooltip: 'Add new task',
-        child: Icon(Icons.add),
+        child: Icon(Icons.add, size: 50),
+        onPressed: () async {
+          final newTask = await _showCreateTask(context);
+          if (newTask != null) {
+            await taskController.create(task: newTask);
+          }
+        },
       ),
     );
   }
 
-  Future<void> _showCreateTask(BuildContext context) async {
-    final task = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (context) => CreateTaskScreen(),
-      ),
-    );
-
-    if (task != null) {
-      await taskController.create(task: task);
-      _updateTasks();
-    }
+  Future<Task> _showCreateTask(BuildContext context) {
+    return Navigator.push<Task>(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => CreateTaskScreen(),
+        ));
   }
-}
 
-Widget _buildListTile(Task task, BuildContext context) {
-  return ExpansionTile(
-    title: TaskView(task),
-    children: task.subtasks
-        .map((task) => GestureDetector(
-            child: TaskView(task),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ExpandedTaskScreen(task: task)),
-              );
-            }))
-        .toList(),
-  );
+  Widget _buildListTile(Task task, BuildContext context) {
+    return ExpansionTile(
+      title: _buildTaskView(task, context),
+      children: task.subtasks.map((task) => _buildTaskView(task, context)).toList(),
+    );
+  }
+
+  Widget _buildTaskView(Task task, BuildContext context) => GestureDetector(
+      child: TaskView(task),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ExpandedTaskScreen(task: task)),
+        );
+      });
 }

@@ -83,6 +83,8 @@ class TaskRepository {
       parent.subtasks.add(task);
     });
 
+    print('repository: loaded ${idTaskMap.values.length} tasks in total');
+
     return idTaskMap.values.where((task) => task.parent == null).toList();
   }
 

@@ -61,13 +61,10 @@ CREATE TABLE IF NOT EXISTS tasks (
   static DatabaseProvider get instance => _instance;
 
   Future<Database> get database async {
-    print('get database called');
 
     if (_database == null) {
       await _init();
     }
-
-    print('database.isOpen=${_database?.isOpen}');
 
     return _database;
   }
