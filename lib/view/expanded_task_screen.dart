@@ -102,8 +102,8 @@ class _ExpandedTaskScreenState extends State<ExpandedTaskScreen> {
           Container(
             child: TaskView(widget.task),
           ),
-          Container(
-            height: 400,
+          Expanded(
+            flex: 1,
             child: task == null
                 ? Center(
                     child: CircularProgressIndicator(),
