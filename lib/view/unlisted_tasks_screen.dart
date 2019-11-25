@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:todo_chunks/model/repository/database_provider.dart';
 import 'package:todo_chunks/view/rebuild_trigger.dart';
 
 import '../model/task.dart';
@@ -36,6 +37,32 @@ class UnlistedTaskScreen extends StatelessWidget {
         tooltip: 'Add new task',
         child: Icon(Icons.add, size: 50),
         onPressed: () async {
+
+          /// on device database debugging (kinda)
+          // final db = await DatabaseProvider.instance.database;
+          // await db.rawUpdate('update tasks set is_done = 0 where id = 58');
+          // final result = await db.rawQuery('select id, is_done from tasks where title = "UI tweaks"');
+          // await showDialog(
+          //   context: context,
+          //   builder: (context) => GestureDetector(
+          //     onTap: () => Navigator.pop(context),
+          //     child: ListView(
+          //       children: result
+          //           .map(
+          //             (res) => Text(
+          //               '$res',
+          //               textScaleFactor: 1,
+          //               style: TextStyle(
+          //                 color: Colors.white,
+          //                 fontWeight: FontWeight.normal,
+          //                 fontSize: 12,
+          //               ),
+          //             ),
+          //           )
+          //           .toList(),
+          //     ),
+          //   ),
+          // );
           final newTask = await _showCreateTask(context);
           if (newTask != null) {
             await taskController.create(task: newTask);

@@ -186,9 +186,10 @@ class TaskViewExpanded extends StatelessWidget {
         TapticFeedback.fromCode(1394);
         await taskController.setDone(task, true);
         Navigator.pop(context);
+        return;
       }
 
-      TapticFeedback.fromCode(1519);
+      TapticFeedback.light();
     };
 
     return Container(

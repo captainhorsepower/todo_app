@@ -15,7 +15,7 @@ class ExpandedTaskScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final taskFuture = taskController.loadById(task.id);
+    final taskFuture = taskController.loadById(task.id, depth: 2);
 
     var taskHolder = task;
     taskFuture.then((task) => taskHolder = task);
