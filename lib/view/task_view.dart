@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:taptic_feedback/taptic_feedback.dart';
+import 'package:todo_chunks/view/create_task_screen.dart';
 
 import '../model/controller/controller_provider.dart';
 import '../model/task.dart';
@@ -72,11 +75,15 @@ class TaskView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: GestureDetector(
-        child: Column(
-          children: <Widget>[
-            Expanded(flex: 3, child: _buildTitleRow(context)),
-            Expanded(flex: 1, child: _buildLeftTimeRow(context)),
-          ],
+        child: Container(
+          // for gesture detection
+          color: Colors.transparent, 
+          child: Column(
+            children: <Widget>[
+              Expanded(flex: 3, child: _buildTitleRow(context)),
+              Expanded(flex: 1, child: _buildLeftTimeRow(context)),
+            ],
+          ),
         ),
         onTap: () {
           TapticFeedback.light();
@@ -100,6 +107,7 @@ class TaskView extends StatelessWidget {
         task.title,
         textScaleFactor: 1.5,
         textAlign: TextAlign.center,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
     );
@@ -108,8 +116,28 @@ class TaskView extends StatelessWidget {
   Widget _buildLeftTimeRow(BuildContext context) {
     final clr = Theme.of(context).accentColor;
     Duration timeLeft = task.dueTo?.difference(DateTime.now());
+
+    var timeString;
+
+    if (timeLeft != null) {
+      final finishLineHours = 36;
+      if (timeLeft.inHours > finishLineHours) {
+        // account for sleep
+        final sleepHours = 9;
+        final hoursLeft = max(36, timeLeft.inHours - timeLeft.inDays * sleepHours);
+        timeString = 'hours left: $hoursLeft';
+      } else {
+        timeString = timeLeft.inMinutes > 120
+            ? 'hours left: ${(timeLeft.inMinutes / 60).round()}'
+            : 'minutes left: ${timeLeft.inMinutes}';
+      }
+    } else {
+      timeString = task.totalDuration.inMinutes > 120
+          ? 'required: ${(task.totalDuration.inMinutes / 60).round()}h'
+          : 'required: ${task.totalDuration.inMinutes} min';
+    }
     return Text(
-      'hours left: ${timeLeft?.inHours ?? 'unlimited!'}',
+      timeString,
       textAlign: TextAlign.left,
       style: TextStyle(color: clr),
     );
@@ -143,7 +171,7 @@ class TaskViewExpanded extends StatelessWidget {
 
   String formatDate(DateTime dateTime) {
     if (dateTime == null) return null;
-    final format = DateFormat('MMMM dd,  hh:mm ');
+    final format = DateFormat('MMMM dd, HH:mm ');
     return format.format(dateTime);
   }
 
@@ -201,7 +229,25 @@ class TaskViewExpanded extends StatelessWidget {
           ),
         ),
         onForcePressPeak: (_) => TapticFeedback.tripleStrong(),
-        onLongPress: () => TapticFeedback.doubleStrong(),
+        onLongPress: () async {
+          TapticFeedback.light();
+          final updated = await Navigator.push<Task>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CreateTaskScreen(task: this.task),
+            ),
+          );
+
+          if (updated != null) {
+            await taskController.update(
+              task,
+              title: updated.title,
+              duration: updated.duration,
+              dueTo: updated.dueTo,
+            );
+            Provider.of<RebuildTrigger>(context).trigger();
+          }
+        },
       ),
     );
   }
@@ -209,11 +255,18 @@ class TaskViewExpanded extends StatelessWidget {
   Widget _buildTitleRow(BuildContext context) {
     return Center(
       child: FittedBox(
-        fit: BoxFit.contain,
-        child: Text(
-          task.title,
-          textScaleFactor: 1.8,
-          style: TextStyle(fontWeight: FontWeight.bold),
+        fit: BoxFit.cover,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            width: 300,
+            child: Text(
+              task.title,
+              textScaleFactor: 1.8,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
         ),
       ),
     );
@@ -221,6 +274,9 @@ class TaskViewExpanded extends StatelessWidget {
 
   Widget _buildDurationRow(BuildContext context) {
     final clr = Theme.of(context).accentColor;
+    final totalTime = task.totalDuration.inMinutes > 120
+        ? '${(task.totalDuration.inMinutes / 60).round()}h'
+        : '${task.totalDuration.inMinutes} min';
     return Row(
       children: <Widget>[
         Expanded(
@@ -233,7 +289,7 @@ class TaskViewExpanded extends StatelessWidget {
         Expanded(
             flex: 2,
             child: Text(
-              '${task.totalDuration.inMinutes} in total',
+              'in total: $totalTime',
               textAlign: TextAlign.center,
               style: TextStyle(color: clr),
             )),

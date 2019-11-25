@@ -15,7 +15,7 @@ class ExpandedTaskScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final taskFuture = taskController.loadById(task.id, depth: 2);
+    final taskFuture = taskController.loadById(task.id);
 
     var taskHolder = task;
     taskFuture.then((task) => taskHolder = task);
@@ -126,15 +126,19 @@ class ExpandedTaskScreen extends StatelessWidget {
   }
 
   Widget _buildListTile(Task task, BuildContext context) {
-    return ExpansionTile(
-      title: _buildTaskView(task, context),
-      children: task.subtasks
-          .map((task) => Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 55),
-                child: _buildTaskView(task, context),
-              ))
-          .toList(),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: _buildTaskView(task, context),
     );
+    // return ExpansionTile(
+    //   title: _buildTaskView(task, context),
+    //   children: task.subtasks
+    //       .map((task) => Padding(
+    //             padding: const EdgeInsets.only(left: 16.0, right: 55),
+    //             child: _buildTaskView(task, context),
+    //           ))
+    //       .toList(),
+    // );
   }
 
   Widget _buildTaskView(Task task, BuildContext context) => TaskView(task);
