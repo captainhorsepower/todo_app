@@ -153,4 +153,16 @@ class TaskRepository {
 
     print('repository: deleted $deletedCount tasks.');
   }
+
+  rawFindAll(String query, [List<dynamic> arguments]) async {
+    print('repository: rawQuery');
+
+    final db = await provider.database;
+
+    final result =
+        await db.rawQuery(query, arguments);
+
+    // return result.isEmpty ? null : result.first;
+    return result;
+  }
 }

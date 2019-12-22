@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_chunks/view/rebuild_trigger.dart';
+import 'package:todo_chunks/view/task_reordering_screen.dart';
 
 import '../model/controller/controller_provider.dart';
 import '../model/task.dart';
@@ -68,6 +69,21 @@ class ExpandedTaskScreen extends StatelessWidget {
                 await taskController.deleteWithKids(taskHolder);
                 Navigator.pop(context);
               }
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.call_split),
+            onPressed: () async {
+              print('reordering');
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  fullscreenDialog: true,
+                  builder: (context) => TaskReorderingView(task: task,),
+                ),
+              );
+              print('reordered!');
+              
             },
           ),
         ],
