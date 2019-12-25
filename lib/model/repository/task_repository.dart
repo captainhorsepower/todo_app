@@ -96,8 +96,6 @@ class TaskRepository {
 
     final result = await db.rawQuery(TaskDao.findTaskAndKidsByIdAndDepth, [id, depth]);
 
-    print('got results: $result');
-
     final idTaskMap = <int, Task>{};
     result.forEach((taskMap) {
       idTaskMap.putIfAbsent(taskMap['id'], () => taskDao.fromJson(taskMap));
@@ -154,13 +152,33 @@ class TaskRepository {
     print('repository: deleted $deletedCount tasks.');
   }
 
+  Future<void> expandForest(Task newRoot) async {
+    print('repo: makeForest, id=${newRoot.id}');
+
+    final db = await provider.database;
+
+    var result =
+        await db.rawQuery('SELECT id FROM task_tree_closure WHERE parent_id = ?1', [newRoot.id]);
+    final idLine = result.map((map) => map['id']).join(',');
+    print('repo: subtree IDs ($idLine)');
+
+    await db.rawDelete(
+        'DELETE FROM task_tree_closure WHERE id in ($idLine) and parent_id not in ($idLine)');
+    print('repo: split done');
+
+    await db.rawUpdate(
+        'UPDATE task_tree_closure SET direct_parent_id = null WHERE id = ?1', [newRoot.id]);
+    print('repo: made ${newRoot.id} root');
+
+    print('repo: makeForest done');
+  }
+
   rawFindAll(String query, [List<dynamic> arguments]) async {
     print('repository: rawQuery');
 
     final db = await provider.database;
 
-    final result =
-        await db.rawQuery(query, arguments);
+    final result = await db.rawQuery(query, arguments);
 
     // return result.isEmpty ? null : result.first;
     return result;

@@ -42,11 +42,12 @@ class TaskReorderingView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: MaterialButton(
-        child: Text('depth $i', textScaleFactor: 1.3),
-        onPressed: () async {
-          // taskRepo.rawFindAll('query')
-        }
-      ),
+          child: Text('depth $i', textScaleFactor: 1.3),
+          onPressed: () async {
+            if (i != 0) return;
+
+            await taskRepo.expandForest(task);
+          }),
     );
   }
 }

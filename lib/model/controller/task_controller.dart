@@ -55,4 +55,8 @@ class TaskController {
     return taskService.loadById(id, depth);
   }
 
+  Future<void> makeTaskRoot(Task task) {
+    return taskService.
+  }
+
 }

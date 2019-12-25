@@ -53,4 +53,8 @@ class TaskService {
   Future<Task> loadById(int id, int depth) {
     return taskRepo.findById(id, depth);
   }
+
+  Future<void> makeTaskRoot(Task task) {
+    return taskRepo.expandForest(task);
+  }
 }
