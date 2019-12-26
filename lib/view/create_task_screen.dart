@@ -22,7 +22,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   final dueToController = TextEditingController();
   final dueToTimeController = TextEditingController();
 
-  DateTime dueToDate;
+  DateTime dueToDateTime;
   TimeOfDay dueToTime = TimeOfDay(hour: 23, minute: 59);
 
   @override
@@ -30,9 +30,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     if (widget.task != null) {
       titleController.text = widget.task.title;
       durationController.text = widget.task.duration.inMinutes.toString();
-      dueToDate = widget.task.dueTo;
-      dueToController.text = dueToDate == null ? '' : dateFormat.format(dueToDate);
+      dueToDateTime = widget.task.dueTo;
     }
+    dueToController.text = dueToDateTime == null ? '' : dateFormat.format(dueToDateTime);
     super.initState();
   }
 
@@ -78,20 +78,20 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               readOnly: true,
               controller: dueToController,
               onTap: () async {
-                dueToDate = await showDatePicker(
+                dueToDateTime = await showDatePicker(
                   context: context,
                   firstDate: DateTime.now().subtract(Duration(days: 5)),
                   lastDate: DateTime.now().add(Duration(days: 500)),
                   initialDate: DateTime.now(),
                 );
-                if (dueToDate == null) {
+                if (dueToDateTime == null) {
                   dueToController.text = '';
                   return;
                 }
-                dueToDate = DateTime(dueToDate.year, dueToDate.month, dueToDate.day, dueToTime.hour,
-                    dueToTime.minute);
-                dueToController.text = dateFormat.format(dueToDate);
-                dueToTimeController.text = timeFormat.format(dueToDate);
+                dueToDateTime = DateTime(dueToDateTime.year, dueToDateTime.month, dueToDateTime.day,
+                    dueToTime.hour, dueToTime.minute);
+                dueToController.text = dateFormat.format(dueToDateTime);
+                dueToTimeController.text = timeFormat.format(dueToDateTime);
                 setState(() {});
               },
             ),
@@ -116,21 +116,21 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                     initialTime: TimeOfDay(hour: tmp.inHours, minute: tmp.inMinutes % 60));
                 if (dueToTime == null) {
                   dueToTime = TimeOfDay(hour: 23, minute: 59);
-                  if (dueToDate == null) {
+                  if (dueToDateTime == null) {
                     dueToTimeController.text = '';
                     return;
                   }
                 }
-                dueToDate ??= DateTime.now();
-                dueToDate = DateTime(
-                  dueToDate.year,
-                  dueToDate.month,
-                  dueToDate.day,
+                dueToDateTime ??= DateTime.now();
+                dueToDateTime = DateTime(
+                  dueToDateTime.year,
+                  dueToDateTime.month,
+                  dueToDateTime.day,
                   dueToTime.hour,
                   dueToTime.minute,
                 );
-                dueToController.text = dateFormat.format(dueToDate);
-                dueToTimeController.text = timeFormat.format(dueToDate);
+                dueToController.text = dateFormat.format(dueToDateTime);
+                dueToTimeController.text = timeFormat.format(dueToDateTime);
                 setState(() {});
               },
             ),
@@ -154,7 +154,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                   title: title,
                   duration: duration,
                   createdAt: widget.task?.createdAt ?? DateTime.now(),
-                  dueTo: dueToDate,
+                  dueTo: dueToDateTime,
                 ));
             return;
           }

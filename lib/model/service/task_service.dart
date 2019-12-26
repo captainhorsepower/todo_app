@@ -47,7 +47,7 @@ class TaskService {
   }
 
   Future<List<Task>> loadAllRoots() {
-    return taskRepo.findAllRoots();
+    return taskRepo.findAllRoots(depth: 2);
   }
 
   Future<Task> loadById(int id, int depth) {
