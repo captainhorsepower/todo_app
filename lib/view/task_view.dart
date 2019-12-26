@@ -242,12 +242,7 @@ class TaskViewExpanded extends StatelessWidget {
           );
 
           if (updated != null) {
-            await taskController.update(
-              task,
-              title: updated.title,
-              duration: updated.duration,
-              dueTo: updated.dueTo,
-            );
+            await taskController.update(updated);
             Provider.of<RebuildTrigger>(context).trigger();
           }
         },
