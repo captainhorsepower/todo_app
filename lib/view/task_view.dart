@@ -77,7 +77,7 @@ class TaskView extends StatelessWidget {
       child: GestureDetector(
         child: Container(
           // for gesture detection
-          color: Colors.transparent, 
+          color: Colors.transparent,
           child: Column(
             children: <Widget>[
               Expanded(flex: 3, child: _buildTitleRow(context)),
@@ -96,7 +96,9 @@ class TaskView extends StatelessWidget {
                       )));
         },
         onForcePressPeak: (_) => TapticFeedback.tripleStrong(),
-        onLongPress: () => TapticFeedback.doubleStrong(),
+        onLongPress: () {
+          TapticFeedback.doubleStrong();
+        },
       ),
     );
   }

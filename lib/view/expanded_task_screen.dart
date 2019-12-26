@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_chunks/view/rebuild_trigger.dart';
-import 'package:todo_chunks/view/task_reordering_screen.dart';
 
 import '../model/controller/controller_provider.dart';
 import '../model/task.dart';
@@ -71,21 +70,6 @@ class ExpandedTaskScreen extends StatelessWidget {
               }
             },
           ),
-          IconButton(
-            icon: Icon(Icons.call_split),
-            onPressed: () async {
-              print('reordering');
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  fullscreenDialog: true,
-                  builder: (context) => TaskReorderingView(task: task,),
-                ),
-              );
-              print('reordered!');
-              
-            },
-          ),
         ],
         title: Text('Expanded task screen'),
       ),
@@ -144,18 +128,7 @@ class ExpandedTaskScreen extends StatelessWidget {
   Widget _buildListTile(Task task, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: _buildTaskView(task, context),
+      child: TaskView(task),
     );
-    // return ExpansionTile(
-    //   title: _buildTaskView(task, context),
-    //   children: task.subtasks
-    //       .map((task) => Padding(
-    //             padding: const EdgeInsets.only(left: 16.0, right: 55),
-    //             child: _buildTaskView(task, context),
-    //           ))
-    //       .toList(),
-    // );
   }
-
-  Widget _buildTaskView(Task task, BuildContext context) => TaskView(task);
 }

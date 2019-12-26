@@ -57,9 +57,9 @@ class TaskController {
 
   Future<void> moveSubtree(Task subtree, {Task newParent}) {
     if (newParent == null) {
-      return taskService.makeSubtreeTree(subtree);
+      return taskService.moveToRoot(subtree);
     }
 
-    
+    return taskService.moveToParent(subtree, newParent);
   }
 }
