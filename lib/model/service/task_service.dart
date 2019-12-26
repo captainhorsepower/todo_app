@@ -59,6 +59,8 @@ class TaskService {
   }
 
   Future<void> moveToParent(Task subtree, Task newParent) async {
+    assert(subtree.id != newParent.id);
+
     subtree = await taskRepo.findById(subtree.id, 0);
     newParent = await taskRepo.findById(newParent.id, 0);
 

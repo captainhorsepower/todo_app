@@ -26,6 +26,64 @@ class ExpandedTaskScreen extends StatelessWidget {
       appBar: AppBar(
         actions: <Widget>[
           IconButton(
+            icon: Icon(Icons.compare_arrows),
+            onPressed: () async {
+              final parentId = await showDialog(
+                  context: context,
+                  builder: (_) {
+                    final controller = TextEditingController();
+                    return Dialog(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(40.0),
+                            child: TextField(
+                              decoration: InputDecoration(
+                                hintText: 'Enter parent id',
+                              ),
+                              style: TextStyle(fontSize: 24),
+                              autofocus: true,
+                              controller: controller,
+                            ),
+                          ),
+                          ...<Widget>[
+                            FlatButton(
+                                child: Text('Move to root'),
+                                onPressed: () => Navigator.pop(context, 0)),
+                            FlatButton(
+                              child: Text('Move to parent'),
+                              onPressed: () {
+                                if (controller.text.isEmpty) return;
+
+                                var parentId = int.parse(controller.text);
+                                if (parentId > 0) {
+                                  Navigator.pop(context, parentId);
+                                }
+                              },
+                            ),
+                            FlatButton(
+                                child: Text('Cancel'), onPressed: () => Navigator.pop(context, -1)),
+                          ],
+                        ],
+                      ),
+                    );
+                  });
+
+              if (parentId == 0) {
+                taskController.moveSubtree(task).then((_) =>
+                    Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName)));
+                return;
+              }
+              if (parentId > 0) {
+                taskController
+                    .moveSubtree(task, newParent: Task(id: parentId))
+                    .then((_) => Navigator.pop(context));
+                return;
+              }
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.create),
             onPressed: () async {
               final updatedTask = await Navigator.push(
@@ -71,7 +129,9 @@ class ExpandedTaskScreen extends StatelessWidget {
             },
           ),
         ],
-        title: Text('Expanded task screen'),
+        title: Text(
+          '#${task.id}',
+        ),
       ),
       body: FutureBuilder<Task>(
         future: taskFuture,
