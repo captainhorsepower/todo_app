@@ -89,7 +89,7 @@ class TaskRepository {
   }
 
   Future<Task> findById(int id, int depth) async {
-    print('find with children by id=$id');
+    print('repo: find with children by id=$id');
     assert(id != null && depth != null);
 
     final db = await provider.database;
@@ -152,13 +152,13 @@ class TaskRepository {
     print('repository: deleted $deletedCount tasks.');
   }
 
-  Future<void> expandForest(Task newRoot) async {
-    print('repo: makeForest, id=${newRoot.id}');
+  Future<void> splitForest(int subtreeRootId) async {
+    print('repo: splitForest, id=$subtreeRootId');
 
     final db = await provider.database;
 
     var result =
-        await db.rawQuery('SELECT id FROM task_tree_closure WHERE parent_id = ?1', [newRoot.id]);
+        await db.rawQuery('SELECT id FROM task_tree_closure WHERE parent_id = ?1', [subtreeRootId]);
     final idLine = result.map((map) => map['id']).join(',');
     print('repo: subtree IDs ($idLine)');
 
@@ -167,10 +167,56 @@ class TaskRepository {
     print('repo: split done');
 
     await db.rawUpdate(
-        'UPDATE task_tree_closure SET direct_parent_id = null WHERE id = ?1', [newRoot.id]);
-    print('repo: made ${newRoot.id} root');
+        'UPDATE task_tree_closure SET direct_parent_id = null WHERE id = ?1', [subtreeRootId]);
+    print('repo: made $subtreeRootId root');
 
-    print('repo: makeForest done');
+    print('repo: splitForest done');
+  }
+
+  Future<void> joinForest(int subtreeId, int parentId) async {
+    print('repo: joinForest, subtreeId=$subtreeId, parentId=$parentId');
+
+    final db = await provider.database;
+
+    var parentPathToRoot = await getPathToRoot(parentId);
+    var kids = await db.rawQuery(
+        'SELECT id, direct_parent_id, relative_depth FROM task_tree_closure WHERE parent_id = ?1',
+        [subtreeId]);
+
+    print('\nkids=$kids\nparentPathToRoot=$parentPathToRoot');
+
+    List<Map<String, int>> treeStructure = [];
+    for (var kid in kids) {
+      int id = kid['id'];
+      int directParentId = kid['direct_parent_id'];
+      int depth = kid['relative_depth'];
+
+      for (var parent in parentPathToRoot) {
+        treeStructure.add({
+          'id': id,
+          'parent_id': parent['parent_id'],
+          'direct_parent_id': id == subtreeId ? parentId : directParentId,
+          'relative_depth': depth + 1 + parent['relative_depth']
+        });
+      }
+    }
+
+    final insertValues = treeStructure
+        .map((map) =>
+            "(${map['id']}, ${map['parent_id']}, ${map['direct_parent_id']}, ${map['relative_depth']})")
+        .join(", ");
+
+    await db.update(
+      'task_tree_closure',
+      {'direct_parent_id': parentId},
+      where: 'id=$subtreeId and direct_parent_id is null',
+    );
+
+    await db.rawInsert('INSERT INTO task_tree_closure '
+        '(id, parent_id, direct_parent_id, relative_depth) '
+        'values $insertValues');
+
+    print('repo: joinForest done.');
   }
 
   rawFindAll(String query, [List<dynamic> arguments]) async {
@@ -180,7 +226,6 @@ class TaskRepository {
 
     final result = await db.rawQuery(query, arguments);
 
-    // return result.isEmpty ? null : result.first;
     return result;
   }
 }

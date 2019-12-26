@@ -44,9 +44,10 @@ class TaskReorderingView extends StatelessWidget {
       child: MaterialButton(
           child: Text('depth $i', textScaleFactor: 1.3),
           onPressed: () async {
-            if (i != 0) return;
+            // if (i != 0) return;
 
-            await taskRepo.expandForest(task);
+            // await taskRepo.splitForest(task.id);
+            taskRepo.joinForest(task.id, 12);
           }),
     );
   }

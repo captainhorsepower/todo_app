@@ -54,7 +54,23 @@ class TaskService {
     return taskRepo.findById(id, depth);
   }
 
-  Future<void> makeTaskRoot(Task task) {
-    return taskRepo.expandForest(task);
+  Future<void> makeSubtreeTree(Task subtree) async {
+    return taskRepo.splitForest(subtree.id);
+  }
+
+  Future<void> moveSubtree(Task subtree, Task newParent) async {
+    subtree = await taskRepo.findById(subtree.id, 0);
+    newParent = await taskRepo.findById(newParent.id, 0);
+
+    if (subtree == null || newParent == null) {
+      throw "subtree=$subtree newParent=$newParent";
+    }
+
+    //TODO: use xor
+    if (subtree.isDone != newParent.isDone) {
+      throw "subtree.isDone=${subtree.isDone} newParent.isDone=${newParent.isDone}";
+    }
+
+    
   }
 }

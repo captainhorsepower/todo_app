@@ -36,14 +36,14 @@ class TaskController {
 
     task = task.copyWith(isDone: isDone);
     await taskService.update(task);
-    
+
     return task;
   }
 
   Future<void> deleteWithKids(Task task) async {
     assert(task != null);
     assert(task.id != null);
-    
+
     await taskService.deleteWithKids(task);
   }
 
@@ -55,8 +55,11 @@ class TaskController {
     return taskService.loadById(id, depth);
   }
 
-  Future<void> makeTaskRoot(Task task) {
-    return taskService.
-  }
+  Future<void> moveSubtree(Task subtree, {Task newParent}) {
+    if (newParent == null) {
+      return taskService.makeSubtreeTree(subtree);
+    }
 
+    
+  }
 }
