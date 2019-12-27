@@ -6,17 +6,18 @@ import '../task.dart';
 
 class TaskRepository {
   final DatabaseProvider provider = DatabaseProvider.instance;
-  final TaskDao taskDao = TaskDao();
 
   Future<Task> save(Task task) async {
     print('repository: save task');
 
     final db = await provider.database;
-    final generatedId = await db.insert(TaskDao.tableName, taskDao.toJson(task));
+    final generatedId = await db.insert(
+      TaskDao.tableName,
+      TaskDao.toJson(task),
+    );
     task = task.copyWith(id: generatedId);
 
     print('repository: saved, task.id = $generatedId');
-
     return task;
   }
 
@@ -25,15 +26,28 @@ class TaskRepository {
 
     final String insertValues = pathToRoot
         .map(
-          (map) =>
-              "(${map['id']}, ${map['parent_id']}, ${map['direct_parent_id']}, ${map['relative_depth']})",
+          (map) => '''(
+            ${map['${TaskTreeDao.id}']}, 
+            ${map['${TaskTreeDao.parentId}']}, 
+            ${map['${TaskTreeDao.directParentId}']}, 
+            ${map['${TaskTreeDao.depth}']}
+          )''',
         )
         .join(", ");
 
     final db = await provider.database;
-    await db.rawInsert('INSERT INTO task_tree_closure '
-        '(id, parent_id, direct_parent_id, relative_depth) '
-        'values $insertValues');
+    await db.rawInsert(
+      '''
+      INSERT INTO ${TaskTreeDao.tableName} 
+        (
+          ${TaskTreeDao.id}, 
+          ${TaskTreeDao.parentId}, 
+          ${TaskTreeDao.directParentId}, 
+          ${TaskTreeDao.depth}
+        ) 
+      values $insertValues
+      ''',
+    );
 
     print('repository: task inserted.');
   }
@@ -42,11 +56,14 @@ class TaskRepository {
     print('repository: insert task as root');
 
     final db = await provider.database;
-    await db.insert('task_tree_closure', <String, dynamic>{
-      'id': task.id,
-      'parent_id': task.id,
-      'relative_depth': 0,
-    });
+    await db.insert(
+      TaskTreeDao.tableName,
+      <String, dynamic>{
+        TaskTreeDao.id: task.id,
+        TaskTreeDao.parentId: task.id,
+        TaskTreeDao.depth: 0,
+      },
+    );
 
     print('repository: created new root, id=${task.id}');
   }
@@ -56,10 +73,9 @@ class TaskRepository {
 
     final db = await provider.database;
     final path = await db.query(
-      'task_tree_closure',
+      TaskTreeDao.tableName,
       columns: ['parent_id', 'relative_depth'],
-      where: 'id = ?1',
-      whereArgs: [id],
+      where: 'id = $id',
     );
 
     print('got path.');
@@ -98,13 +114,11 @@ WHERE
     final db = await provider.database;
     final result = await db.rawQuery(sql);
 
-    result.forEach(print);
-
     final idTaskMap = <int, Task>{};
     result.forEach((taskMap) {
       idTaskMap.putIfAbsent(
         taskMap['${TaskDao.id}'],
-        () => taskDao.fromJson(taskMap),
+        () => TaskDao.fromJson(taskMap),
       );
     });
 
@@ -134,7 +148,7 @@ WHERE
 
     final idTaskMap = <int, Task>{};
     result.forEach((taskMap) {
-      idTaskMap.putIfAbsent(taskMap['id'], () => taskDao.fromJson(taskMap));
+      idTaskMap.putIfAbsent(taskMap['id'], () => TaskDao.fromJson(taskMap));
     });
 
     result.forEach((taskMap) {
@@ -157,7 +171,7 @@ WHERE
 
     int result = await db.update(
       TaskDao.tableName,
-      taskDao.toJson(task),
+      TaskDao.toJson(task),
       where: '${TaskDao.id} = ?',
       whereArgs: [task.id],
     );

@@ -69,7 +69,7 @@ WHERE
   AND task.is_done = 0
   """;
 
-  Task fromJson(Map<String, dynamic> data) {
+  static Task fromJson(Map<String, dynamic> data) {
     return Task(
       id: data['id'],
       title: data['title'],
@@ -81,7 +81,7 @@ WHERE
     );
   }
 
-  Map<String, dynamic> toJson(Task task) {
+  static Map<String, dynamic> toJson(Task task) {
     return <String, dynamic>{
       'id': task.id,
       'title': task.title,
