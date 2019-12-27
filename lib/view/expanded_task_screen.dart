@@ -17,121 +17,23 @@ class ExpandedTaskScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final taskFuture = taskController.loadById(task.id, depth: 2);
 
-    var taskHolder = task;
-    taskFuture.then((task) => taskHolder = task);
-
-    final trigger = Provider.of<RebuildTrigger>(context);
-
     return Scaffold(
       appBar: AppBar(
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.compare_arrows),
-            onPressed: () async {
-              final parentId = await showDialog(
-                  context: context,
-                  builder: (_) {
-                    final controller = TextEditingController();
-                    return Dialog(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(40.0),
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: 'Enter parent id',
-                              ),
-                              style: TextStyle(fontSize: 24),
-                              autofocus: true,
-                              controller: controller,
-                            ),
-                          ),
-                          ...<Widget>[
-                            FlatButton(
-                                child: Text('Move to root'),
-                                onPressed: () => Navigator.pop(context, 0)),
-                            FlatButton(
-                              child: Text('Move to parent'),
-                              onPressed: () {
-                                if (controller.text.isEmpty) return;
-
-                                var parentId = int.parse(controller.text);
-                                if (parentId > 0) {
-                                  Navigator.pop(context, parentId);
-                                }
-                              },
-                            ),
-                            FlatButton(
-                                child: Text('Cancel'), onPressed: () => Navigator.pop(context, -1)),
-                          ],
-                        ],
-                      ),
-                    );
-                  });
-
-              if (parentId == 0) {
-                taskController.moveSubtree(task).then((_) =>
-                    Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName)));
-                return;
-              }
-              if (parentId > 0) {
-                taskController
-                    .moveSubtree(task, newParent: Task(id: parentId))
-                    .then((_) => Navigator.pop(context));
-                return;
-              }
-            },
+            onPressed: _doReorder(context),
           ),
           IconButton(
             icon: Icon(Icons.create),
-            onPressed: () async {
-              final updatedTask = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  fullscreenDialog: true,
-                  builder: (context) => CreateTaskScreen(task: taskHolder),
-                ),
-              );
-
-              if (updatedTask != null) {
-                await taskController.update(updatedTask);
-                trigger.trigger();
-              }
-            },
+            onPressed: _doEdit(context),
           ),
           IconButton(
             icon: Icon(Icons.delete),
-            onPressed: () async {
-              bool deleteFlag = await showDialog(
-                context: context,
-                builder: (context) => Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    FlatButton(
-                      child: Text('Delete', textScaleFactor: 3),
-                      onPressed: () => Navigator.pop(context, true),
-                    ),
-                    FlatButton(
-                      child: Text('Mercy', textScaleFactor: 3),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              );
-
-              deleteFlag ??= false;
-
-              if (deleteFlag) {
-                await taskController.deleteWithKids(taskHolder);
-                Navigator.pop(context);
-              }
-            },
+            onPressed: _doDelete(context),
           ),
         ],
-        title: Text(
-          '#${task.id}',
-        ),
+        title: Text('#${task.id}'),
       ),
       body: FutureBuilder<Task>(
         future: taskFuture,
@@ -143,9 +45,8 @@ class ExpandedTaskScreen extends StatelessWidget {
           final loadedTask = snapshot.data;
           return Column(
             children: <Widget>[
-              _mainTaskView(context, loadedTask),
+              _buildTaskView(context, loadedTask),
               Expanded(
-                flex: 1,
                 child: _buildSubtaskList(context, loadedTask),
               ),
             ],
@@ -153,15 +54,9 @@ class ExpandedTaskScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          Task newTask = await _showCreateTaskScreen(context);
-          if (newTask != null) {
-            await taskController.create(task: newTask, parent: task);
-            trigger.trigger();
-          }
-        },
-        tooltip: 'Add new task',
         child: Icon(Icons.add),
+        onPressed: _doCreate(context),
+        tooltip: 'Add new task',
       ),
     );
   }
@@ -175,7 +70,7 @@ class ExpandedTaskScreen extends StatelessWidget {
         ));
   }
 
-  Widget _mainTaskView(BuildContext context, Task task) {
+  Widget _buildTaskView(BuildContext context, Task task) {
     return Container(
       child: TaskViewExpanded(task),
     );
@@ -189,6 +84,136 @@ class ExpandedTaskScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: TaskView(task),
+    );
+  }
+
+  _doReorder(context) => () async {
+        final parentId = await showDialog(
+          context: context,
+          builder: (_) => ReorderDialog(task.id),
+        );
+
+        if (parentId == null) return;
+
+        if (parentId == 0) {
+          taskController.moveSubtree(task).then((_) => Navigator.popUntil(
+              context,
+              ModalRoute.withName(
+                Navigator.defaultRouteName,
+              )));
+        } else if (parentId > 0) {
+          taskController
+              .moveSubtree(task, newParent: Task(id: parentId))
+              .then((_) => Navigator.pop(context));
+        }
+      };
+
+  _doEdit(context) => () async {
+        final updatedTask = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (context) => CreateTaskScreen(task: task),
+          ),
+        );
+
+        if (updatedTask != null) {
+          await taskController.update(updatedTask);
+          final trigger = Provider.of<RebuildTrigger>(context);
+          trigger.trigger();
+        }
+      };
+
+  _doDelete(context) => () async {
+        bool deleteFlag = await showDialog(
+          context: context,
+          builder: (context) => DeleteDialog(),
+        );
+
+        deleteFlag ??= false;
+
+        if (deleteFlag) {
+          await taskController.deleteWithKids(task);
+          Navigator.pop(context);
+        }
+      };
+
+  _doCreate(context) => () async {
+        Task newTask = await _showCreateTaskScreen(context);
+        if (newTask != null) {
+          await taskController.create(task: newTask, parent: task);
+
+          final trigger = Provider.of<RebuildTrigger>(context);
+
+          trigger.trigger();
+        }
+      };
+}
+
+class ReorderDialog extends StatelessWidget {
+  final controller = TextEditingController();
+  final myId;
+
+  ReorderDialog(this.myId);
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(40.0),
+            child: TextField(
+              decoration: InputDecoration(hintText: 'Enter parent id'),
+              style: TextStyle(fontSize: 24),
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              controller: controller,
+            ),
+          ),
+          ...<Widget>[
+            FlatButton(
+              child: Text('Move to root'),
+              onPressed: () => Navigator.pop(context, 0),
+            ),
+            FlatButton(
+              child: Text('Move to parent'),
+              onPressed: () {
+                if (controller.text.isEmpty) return;
+
+                var parentId = int.parse(controller.text);
+                if (parentId > 0 && parentId != myId) {
+                  Navigator.pop(context, parentId);
+                }
+              },
+            ),
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class DeleteDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: <Widget>[
+        FlatButton(
+          child: Text('Delete', textScaleFactor: 3),
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        FlatButton(
+          child: Text('Mercy', textScaleFactor: 3),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ],
     );
   }
 }
