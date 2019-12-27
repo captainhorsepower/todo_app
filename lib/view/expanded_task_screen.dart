@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:taptic_feedback/taptic_feedback.dart';
 import 'package:todo_chunks/view/rebuild_trigger.dart';
 
 import '../model/controller/controller_provider.dart';
@@ -47,7 +48,7 @@ class ExpandedTaskScreen extends StatelessWidget {
             children: <Widget>[
               _buildTaskView(context, loadedTask),
               Expanded(
-                child: _buildSubtaskList(context, loadedTask),
+                child: _buildSubtasks(context, loadedTask),
               ),
             ],
           );
@@ -71,19 +72,48 @@ class ExpandedTaskScreen extends StatelessWidget {
   }
 
   Widget _buildTaskView(BuildContext context, Task task) {
-    return Container(
+    return GestureDetector(
       child: TaskViewExpanded(task),
+      onLongPress: _doEdit(context),
+      onForcePressPeak: (_) => TapticFeedback.tripleStrong(),
     );
   }
 
-  Widget _buildSubtaskList(BuildContext context, Task task) {
-    return ListView(children: task.subtasks.map((task) => _buildListTile(task, context)).toList());
+  Widget _buildSubtasks(BuildContext context, Task task) {
+    return ListView(
+      children: task.subtasks
+          .map(
+            (task) => _buildListTile(
+              task,
+              context,
+            ),
+          )
+          .toList(),
+    );
   }
 
   Widget _buildListTile(Task task, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: TaskView(task),
+      child: GestureDetector(
+        child: GestureDetector(
+          child: TaskView(task),
+          onTap: () {
+            TapticFeedback.light();
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ChangeNotifierProvider(
+                          builder: (_) => RebuildTrigger(),
+                          child: ExpandedTaskScreen(task),
+                        )));
+          },
+          onForcePressPeak: (_) => TapticFeedback.tripleStrong(),
+          onLongPress: () {
+            TapticFeedback.doubleStrong();
+          },
+        ),
+      ),
     );
   }
 
