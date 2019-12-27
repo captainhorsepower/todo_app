@@ -4,14 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:taptic_feedback/taptic_feedback.dart';
-import 'package:todo_chunks/view/create_task_screen.dart';
 
 import '../model/controller/controller_provider.dart';
 import '../model/task.dart';
-import 'expanded_task_screen.dart';
 import 'rebuild_trigger.dart';
 
-class TaskView extends StatelessWidget {
+class   TaskView extends StatelessWidget {
   final Task task;
   final taskController = ControllerProvider.instance.taskController;
 
@@ -74,31 +72,15 @@ class TaskView extends StatelessWidget {
   Widget _buildTaskLayout(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: GestureDetector(
-        child: Container(
-          // for gesture detection
-          color: Colors.transparent,
-          child: Column(
-            children: <Widget>[
-              Expanded(flex: 3, child: _buildTitleRow(context)),
-              Expanded(flex: 1, child: _buildLeftTimeRow(context)),
-            ],
-          ),
+      child: Container(
+        // for gesture detection
+        color: Colors.transparent,
+        child: Column(
+          children: <Widget>[
+            Expanded(flex: 3, child: _buildTitleRow(context)),
+            Expanded(flex: 1, child: _buildLeftTimeRow(context)),
+          ],
         ),
-        onTap: () {
-          TapticFeedback.light();
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => ChangeNotifierProvider(
-                        builder: (_) => RebuildTrigger(),
-                        child: ExpandedTaskScreen(task),
-                      )));
-        },
-        onForcePressPeak: (_) => TapticFeedback.tripleStrong(),
-        onLongPress: () {
-          TapticFeedback.doubleStrong();
-        },
       ),
     );
   }
@@ -208,7 +190,6 @@ class TaskViewExpanded extends StatelessWidget {
           ),
         ),
         onTap: func,
-        onLongPress: func,
       ),
     );
   }
@@ -217,35 +198,18 @@ class TaskViewExpanded extends StatelessWidget {
     final clr = Theme.of(context).accentColor;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: GestureDetector(
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: clr),
-            borderRadius: BorderRadius.all(Radius.circular(12.0)),
-          ),
-          child: Column(
-            children: <Widget>[
-              Expanded(flex: 3, child: _buildTitleRow(context)),
-              Expanded(flex: 1, child: _buildDurationRow(context)),
-              Expanded(flex: 2, child: _buildDateRow(context)),
-            ],
-          ),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: clr),
+          borderRadius: BorderRadius.all(Radius.circular(12.0)),
         ),
-        onForcePressPeak: (_) => TapticFeedback.tripleStrong(),
-        onLongPress: () async {
-          TapticFeedback.light();
-          final updated = await Navigator.push<Task>(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CreateTaskScreen(task: this.task),
-            ),
-          );
-
-          if (updated != null) {
-            await taskController.update(updated);
-            Provider.of<RebuildTrigger>(context).trigger();
-          }
-        },
+        child: Column(
+          children: <Widget>[
+            Expanded(flex: 3, child: _buildTitleRow(context)),
+            Expanded(flex: 1, child: _buildDurationRow(context)),
+            Expanded(flex: 2, child: _buildDateRow(context)),
+          ],
+        ),
       ),
     );
   }

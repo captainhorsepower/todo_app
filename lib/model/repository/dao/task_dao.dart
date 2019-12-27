@@ -21,27 +21,12 @@ class TaskDao {
   // all this fields must be static, to be accessed in initalizers.
   static const tableName = 'tasks';
   static const id = 'id';
-  static const parentId = 'parent_id';
   static const title = 'title';
   static const durationMins = 'duration_mins';
   static const totalDurationMins = 'total_duration_mins';
   static const createdAtUtc = 'created_at';
   static const dueToUtc = 'due_to';
   static const isDone = 'is_done';
-  static const kids = 'kids';
-
-  static const createTableQuery = 'CREATE TABLE $tableName ('
-      '  $id INTEGER,'
-      '  $parentId INTEGER,'
-      '  $title TEXT not null,'
-      '  $durationMins INT default 0,'
-      '  $totalDurationMins INT not null,'
-      '  $createdAtUtc TEXT not null,'
-      '  $dueToUtc TEXT, '
-      '  $isDone BOOLEAN not null default false,'
-      '  PRIMARY KEY ($id),'
-      '  FOREIGN KEY ($parentId) REFERENCES tasks($id)'
-      ');';
 
   static const findTaskByIdQuery = """
 SELECT
@@ -82,29 +67,6 @@ WHERE
   c.parent_id = ?1
   AND c.relative_depth <= ?2
   AND task.is_done = 0
-  """;
-
-  static const findRootsAndKidsAtDepth = """
-SELECT
-  c.direct_parent_id,
-  task.*,
-  (
-    SELECT
-      COALESCE(sum(kid.duration_mins), 0)
-    FROM
-      tasks kid
-      LEFT JOIN task_tree_closure c ON kid.id = c.id
-    WHERE
-      c.parent_id = task.id
-      AND kid.is_done = false
-  ) AS total_duration_mins
-FROM
-  tasks task
-  LEFT JOIN task_tree_closure c ON task.id = c.id
-WHERE
-  c.parent_id IN (SELECT id FROM task_tree_closure WHERE direct_parent_id IS NULL)
-  AND c.relative_depth <= ?1
-  AND task.is_done = false
   """;
 
   Task fromJson(Map<String, dynamic> data) {

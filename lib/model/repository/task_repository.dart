@@ -1,4 +1,5 @@
 import 'package:todo_chunks/model/repository/dao/task_dao.dart';
+import 'package:todo_chunks/model/repository/dao/task_tree_closure_dao.dart';
 import 'package:todo_chunks/model/repository/database_provider.dart';
 
 import '../task.dart';
@@ -23,8 +24,10 @@ class TaskRepository {
     print('repository: insert task in the tree');
 
     final String insertValues = pathToRoot
-        .map((map) =>
-            "(${map['id']}, ${map['parent_id']}, ${map['direct_parent_id']}, ${map['relative_depth']})")
+        .map(
+          (map) =>
+              "(${map['id']}, ${map['parent_id']}, ${map['direct_parent_id']}, ${map['relative_depth']})",
+        )
         .join(", ");
 
     final db = await provider.database;
@@ -66,19 +69,52 @@ class TaskRepository {
   Future<List<Task>> findAllRoots({int depth = 1}) async {
     print('repository: find all roots');
 
+    // работает корректно только для isDone = false;
+    final isDone = false;
+    final sql = """
+SELECT
+  c.${TaskTreeDao.directParentId},
+  task.*,
+  (
+    SELECT
+      COALESCE(sum(kid.${TaskDao.durationMins}), 0)
+    FROM
+      ${TaskDao.tableName} kid
+      LEFT JOIN ${TaskTreeDao.tableName} c ON kid.${TaskDao.id} = c.${TaskTreeDao.id}
+    WHERE
+      c.${TaskTreeDao.parentId} = task.${TaskDao.id}
+      AND kid.${TaskDao.isDone} = $isDone
+  ) AS ${TaskDao.totalDurationMins}
+FROM
+  ${TaskDao.tableName} task
+  LEFT JOIN ${TaskTreeDao.tableName} c ON task.id = c.id
+WHERE
+  c.${TaskTreeDao.parentId} 
+    IN (SELECT ${TaskTreeDao.id} FROM ${TaskTreeDao.tableName} WHERE ${TaskTreeDao.directParentId} IS NULL)
+  AND c.${TaskTreeDao.depth} <= $depth
+  AND task.${TaskDao.isDone} = $isDone
+""";
+
     final db = await provider.database;
-    final result = await db.rawQuery(TaskDao.findRootsAndKidsAtDepth, [depth]);
+    final result = await db.rawQuery(sql);
+
+    result.forEach(print);
 
     final idTaskMap = <int, Task>{};
     result.forEach((taskMap) {
-      idTaskMap.putIfAbsent(taskMap['id'], () => taskDao.fromJson(taskMap));
+      idTaskMap.putIfAbsent(
+        taskMap['${TaskDao.id}'],
+        () => taskDao.fromJson(taskMap),
+      );
     });
 
     result.forEach((taskMap) {
-      if (taskMap['direct_parent_id'] == null) return;
-      final task = idTaskMap[taskMap['id']];
-      final parent = idTaskMap[taskMap['direct_parent_id']];
+      if (taskMap['${TaskTreeDao.directParentId}'] == null) return;
 
+      final task = idTaskMap[taskMap['${TaskDao.id}']];
+      final parent = idTaskMap[taskMap['${TaskTreeDao.directParentId}']];
+
+      // FIXME: это потенциально испортит сортировку базой данных
       task.parent = parent;
       parent.subtasks.add(task);
     });
