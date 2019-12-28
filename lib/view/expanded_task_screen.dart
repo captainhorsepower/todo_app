@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:taptic_feedback/taptic_feedback.dart';
 import 'package:todo_chunks/view/rebuild_trigger.dart';
 
 import '../model/controller/controller_provider.dart';
@@ -34,7 +33,9 @@ class ExpandedTaskScreen extends StatelessWidget {
             onPressed: _doDelete(context),
           ),
         ],
-        title: Text('#${task.id}'),
+        title: Text(
+          '#${task.id}',
+        ),
       ),
       body: FutureBuilder<Task>(
         future: taskFuture,
@@ -46,18 +47,26 @@ class ExpandedTaskScreen extends StatelessWidget {
           final loadedTask = snapshot.data;
           return Column(
             children: <Widget>[
-              _buildTaskView(context, loadedTask),
+              _mainTaskView(context, loadedTask),
               Expanded(
-                child: _buildSubtasks(context, loadedTask),
+                flex: 1,
+                child: _buildSubtaskList(context, loadedTask),
               ),
             ],
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: _doCreate(context),
+        onPressed: () async {
+          Task newTask = await _showCreateTaskScreen(context);
+          if (newTask != null) {
+            await taskController.create(task: newTask, parent: task);
+            
+            Provider.of<RebuildTrigger>(context).trigger();
+          }
+        },
         tooltip: 'Add new task',
+        child: Icon(Icons.add),
       ),
     );
   }
@@ -71,50 +80,24 @@ class ExpandedTaskScreen extends StatelessWidget {
         ));
   }
 
-  Widget _buildTaskView(BuildContext context, Task task) {
-    return GestureDetector(
+  Widget _mainTaskView(BuildContext context, Task task) {
+    return Container(
       child: TaskViewExpanded(task),
-      onLongPress: _doEdit(context),
-      onForcePressPeak: (_) => TapticFeedback.tripleStrong(),
     );
   }
 
-  Widget _buildSubtasks(BuildContext context, Task task) {
-    return ListView(
-      children: task.subtasks
-          .map(
-            (task) => _buildListTile(task, context),
-          )
-          .toList(),
-    );
+  Widget _buildSubtaskList(BuildContext context, Task task) {
+    return ListView(children: task.subtasks.map((task) => _buildListTile(task, context)).toList());
   }
 
   Widget _buildListTile(Task task, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: GestureDetector(
-        child: GestureDetector(
-          child: TaskView(task),
-          onTap: () {
-            TapticFeedback.light();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ChangeNotifierProvider.value(
-                  value: Provider.of<RebuildTrigger>(context),
-                  child: ExpandedTaskScreen(task),
-                ),
-              ),
-            );
-          },
-          onForcePressPeak: (_) => TapticFeedback.tripleStrong(),
-          onLongPress: () => TapticFeedback.doubleStrong(),
-        ),
-      ),
+      child: TaskView(task),
     );
   }
 
-  _doReorder(BuildContext context) => () async {
+  void Function() _doReorder(BuildContext context) => () async {
         final parentId = await showDialog(
           context: context,
           builder: (_) => ReorderDialog(task.id),
@@ -123,10 +106,8 @@ class ExpandedTaskScreen extends StatelessWidget {
         if (parentId == null) return;
 
         if (parentId == 0) {
-          taskController.moveSubtree(task).then((_) => Navigator.popUntil(
-                context,
-                ModalRoute.withName(Navigator.defaultRouteName),
-              ));
+          taskController.moveSubtree(task).then(
+              (_) => Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName)));
         } else if (parentId > 0) {
           taskController
               .moveSubtree(task, newParent: Task(id: parentId))
@@ -134,7 +115,7 @@ class ExpandedTaskScreen extends StatelessWidget {
         }
       };
 
-  _doEdit(BuildContext context) => () async {
+  void Function() _doEdit(BuildContext context) => () async {
         final updatedTask = await Navigator.push(
           context,
           MaterialPageRoute(
@@ -145,12 +126,11 @@ class ExpandedTaskScreen extends StatelessWidget {
 
         if (updatedTask != null) {
           await taskController.update(updatedTask);
-          final trigger = Provider.of<RebuildTrigger>(context);
-          trigger.trigger();
+          Provider.of<RebuildTrigger>(context).trigger();
         }
       };
 
-  _doDelete(BuildContext context) => () async {
+  void Function() _doDelete(BuildContext context) => () async {
         bool deleteFlag = await showDialog(
           context: context,
           builder: (context) => DeleteDialog(),
@@ -160,19 +140,7 @@ class ExpandedTaskScreen extends StatelessWidget {
 
         if (deleteFlag) {
           await taskController.deleteWithKids(task);
-
           Navigator.pop(context);
-        }
-      };
-
-  _doCreate(BuildContext context) => () async {
-        Task newTask = await _showCreateTaskScreen(context);
-        if (newTask != null) {
-          await taskController.create(task: newTask, parent: task);
-
-          final trigger = Provider.of<RebuildTrigger>(context);
-
-          trigger.trigger();
         }
       };
 }

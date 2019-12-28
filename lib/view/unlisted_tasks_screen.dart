@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:taptic_feedback/taptic_feedback.dart';
 import 'package:todo_chunks/view/rebuild_trigger.dart';
 
 import '../model/task.dart';
 import '../model/controller/controller_provider.dart';
-import 'expanded_task_screen.dart';
 import 'task_view.dart';
 import 'create_task_screen.dart';
 
@@ -16,9 +14,7 @@ class UnlistedTaskScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tasksFuture = taskController.loadAllRoots();
-
     final trigger = Provider.of<RebuildTrigger>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: Text('All Tasks'),
@@ -32,14 +28,7 @@ class UnlistedTaskScreen extends StatelessWidget {
 
           List<Task> tasks = snapshot.data;
           return ListView(
-            children: tasks
-                .map(
-                  (task) => _buildListTile(
-                    task,
-                    context,
-                  ),
-                )
-                .toList(),
+            children: tasks.map((task) => _buildListTile(task, context)).toList(),
           );
         },
       ),
@@ -69,25 +58,9 @@ class UnlistedTaskScreen extends StatelessWidget {
   Widget _buildListTile(Task task, BuildContext context) {
     return ExpansionTile(
       title: _buildTaskView(task, context),
-      children: task.subtasks.map((task) => TaskView(task)).toList(),
+      children: task.subtasks.map((task) => _buildTaskView(task, context)).toList(),
     );
   }
 
-  Widget _buildTaskView(Task task, BuildContext context) => GestureDetector(
-        child: TaskView(task),
-        onTap: () {
-          TapticFeedback.light();
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => ChangeNotifierProvider(
-                        builder: (_) => RebuildTrigger(),
-                        child: ExpandedTaskScreen(task),
-                      )));
-        },
-        onForcePressPeak: (_) => TapticFeedback.tripleStrong(),
-        onLongPress: () {
-          TapticFeedback.doubleStrong();
-        },
-      );
+  Widget _buildTaskView(Task task, BuildContext context) => TaskView(task);
 }
